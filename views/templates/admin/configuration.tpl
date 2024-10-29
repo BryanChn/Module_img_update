@@ -35,7 +35,7 @@
                         <div class="btn-group dropend" role="group">
                             <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown"
                                 aria-expanded="false">
-                                Actions
+                                Action
                             </button>
                             <ul class="dropdown-menu">
                                 <li> <a class="dropdown-item" href="{$modify_link}{$list.id_s2i_list}">Modifier</a>
