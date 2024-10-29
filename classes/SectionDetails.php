@@ -1,0 +1,18 @@
+<?php
+class SectionDetails extends ObjectModel
+{
+    public $id_s2i_detail;
+    public $id_s2i_section;
+    public $active;
+    public $only_title;
+
+    public static $definition = [
+        'table' => 's2i_section_details',
+        'primary' => 'id_s2i_detail',
+        'fields' => [
+            'id_s2i_section' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => true],
+            'active' => ['type' => self::TYPE_BOOL, 'validate' => 'isBool', 'required' => true],
+            'only_title' => ['type' => self::TYPE_BOOL, 'validate' => 'isBool', 'required' => false],
+        ],
+    ];
+}

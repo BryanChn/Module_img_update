@@ -4,8 +4,12 @@ if (!defined('_PS_VERSION_')) {
 }
 
 
-require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/S2iLists.php';
+require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/Section.php';
+require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/HelperListSection.php';
+require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/Create_section_form.php';
 require_once dirname(__FILE__) . '/../../config/config.inc.php';
+
+
 
 class S2i_Update_Img extends Module
 {
@@ -29,8 +33,7 @@ class S2i_Update_Img extends Module
     {
         return parent::install()
             && $this->registerHook('displayBackOfficeHeader')
-            && $this->createDatabaseTable()
-            && $this->addDefaultLists();
+            && $this->createDatabaseTable();
     }
 
     public function hookActionAdminControllerSetMedia()
@@ -40,6 +43,10 @@ class S2i_Update_Img extends Module
             $this->_path . 'css/style.css'
 
         );
+        $this->context->controller->registerJavascript(
+            'bootstrap_bundle',
+            'https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js'
+        );
     }
 
     public function uninstall()
@@ -47,74 +54,76 @@ class S2i_Update_Img extends Module
         return parent::uninstall();
     }
 
-    private function createDatabaseTable()
+
+
+    protected function createDatabaseTable()
     {
-        $sql = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 's2i_lists` (
-            `id_s2i_list` INT(11) NOT NULL AUTO_INCREMENT,
+        $sql = [];
+
+        // Table principale des sections
+        $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 's2i_sections` (
+            `id_s2i_section` INT(11) NOT NULL AUTO_INCREMENT,
             `name` VARCHAR(255) NOT NULL,
             `active` TINYINT(1) NOT NULL DEFAULT 1,
             `slider` TINYINT(1) NOT NULL DEFAULT 0,
-            `speed` INT(11)  DEFAULT 5000,
-            `image` VARCHAR(255) DEFAULT NULL,
-            PRIMARY KEY (`id_s2i_list`),
-            UNIQUE KEY `unique_name` (`name`)
+            `speed` INT(11) NOT NULL DEFAULT 5000,
+            PRIMARY KEY (`id_s2i_section`)
         ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
-        return Db::getInstance()->execute($sql);
-    }
+        // Table des détails des sections
+        $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 's2i_section_details` (
+            `id_s2i_detail` INT(11) NOT NULL AUTO_INCREMENT,
+            `id_s2i_section` INT(11) NOT NULL,
+            `active` TINYINT(1) NOT NULL DEFAULT 1,
+            `only_title` TINYINT(1) NOT NULL DEFAULT 0,
+            PRIMARY KEY (`id_s2i_detail`),
+            FOREIGN KEY (`id_s2i_section`) REFERENCES `' . _DB_PREFIX_ . 's2i_sections`(`id_s2i_section`) ON DELETE CASCADE
+        ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
+        // Table des traductions pour les détails
+        $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 's2i_section_details_lang` (
+            `id_s2i_detail` INT(11) NOT NULL,
+            `id_lang` INT(11) NOT NULL,
+            `title` VARCHAR(255) NOT NULL,
+            `legend` VARCHAR(255) NULL,
+            `url` VARCHAR(255) NULL,
+            `image` VARCHAR(255) NULL,
+            PRIMARY KEY (`id_s2i_detail`, `id_lang`),
+            FOREIGN KEY (`id_s2i_detail`) REFERENCES `' . _DB_PREFIX_ . 's2i_section_details`(`id_s2i_detail`) ON DELETE CASCADE
+        ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
-    public function getLists()
-    {
-        return S2iLists::getAllLists();
-    }
-
-
-    public function addDefaultLists()
-    {
-        $defaultLists = [
-            ['name' => 'Accueil', 'active' => 1, 'slider' => 0, 'speed' => null, 'image' => null],
-            ['name' => 'Footer', 'active' => 1, 'slider' => 0, 'speed' => null, 'image' => null],
-            ['name' => 'Header', 'active' => 1, 'slider' => 0, 'speed' => null, 'image' => null],
-        ];
-
-        foreach ($defaultLists as $listData) {
-            $exists = Db::getInstance()->getValue(
-                'SELECT id_s2i_list FROM `' . _DB_PREFIX_ . 's2i_lists` WHERE name = "' . pSQL($listData['name']) . '"'
-            );
-
-            if (!$exists) {
-                $list = new S2iLists();
-                $list->name = $listData['name'];
-                $list->active = $listData['active'];
-                $list->slider = $listData['slider'];
-                $list->speed = $listData['speed'];
-                $list->image = $listData['image'];
-                $list->add();
+        // Exécution de chaque requête
+        foreach ($sql as $query) {
+            if (!Db::getInstance()->execute($query)) {
+                return false;
             }
         }
 
         return true;
     }
 
-
-
+    public function getSection()
+    {
+        return HelperListSection::renderSectionList($this);
+    }
 
     public function getContent()
     {
-        $lists = $this->getLists();
+        $form = new Create_section_form($this);
+        $section_form = $form->renderForm();
+
+        $sectionsList = $this->getSection();
         $modify_link = $this->context->link->getAdminLink('AdminS2iImage') . '&action=modify&id=';
         $delete_link = $this->context->link->getAdminLink('AdminS2iImage') . '&action=delete&id=';
-        $create_link = $this->context->link->getAdminLink('AdminS2iImage') . '&action=create';
-
-
+        // $create_link = $this->context->link->getAdminLink('AdminS2iImage') . '&action=create';
 
 
         $this->context->smarty->assign([
-            'lists' => $lists,
+            'section_form' => $section_form,
+            'sectionsList' => $sectionsList,
             'modify_link' => $modify_link,
             'delete_link' => $delete_link,
-            'create_link' => $create_link,
+
         ]);
 
         return $this->context->smarty->fetch($this->local_path . 'views/templates/admin/configuration.tpl');

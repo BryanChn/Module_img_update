@@ -7,125 +7,86 @@ class AdminS2iImageController extends ModuleAdminController
         parent::__construct();
         $this->bootstrap = true;
     }
+
     public function postProcess()
     {
         $action = Tools::getValue('action');
 
         if ($action === 'delete' && Tools::getValue('id')) {
-            $this->handleDeleteList();
-        } elseif ($action === 'modify' && Tools::getValue('id')) {
-            $this->handleModifyList();
-        } elseif ($action === 'create') {
-            $this->handleCreateList();
+            $this->handleDeleteSection();
+        } elseif (Tools::isSubmit('submitCreateSection')) {
+            $this->handleCreateSection();
         }
+
         parent::postProcess();
     }
 
-    private function handleDeleteList()
+    private function handleDeleteSection()
     {
         $id = (int)Tools::getValue('id');
-        $list = new S2iLists($id);
-
-        if (Validate::isLoadedObject($list)) {
-            if ($list->delete()) {
-                $this->confirmations[] = $this->trans('La liste a été supprimée avec succès.', [], 'Modules.S2iUpdateImg.Admin');
-                Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules') . '&configure=' . $this->module->name . '&conf=1');
-            } else {
-                $this->errors[] = $this->trans('Erreur : Impossible de supprimer cette liste.', [], 'Modules.S2iUpdateImg.Admin');
-            }
+        if ($id) {
+            Db::getInstance()->delete('s2i_sections', 'id_s2i_section = ' . (int) $id);
+            Db::getInstance()->delete('s2i_section_details', 'id_s2i_section = ' . (int) $id);
+            Db::getInstance()->delete('s2i_section_details_lang', 'id_s2i_section = ' . (int) $id);
+            $this->confirmations[] = $this->trans('La section a été supprimée avec succès.', [], 'Modules.S2iUpdateImg.Admin');
         } else {
             $this->errors[] = $this->trans('Erreur : Objet introuvable pour la suppression.', [], 'Modules.S2iUpdateImg.Admin');
         }
     }
 
-    private function handleModifyList()
-    { {
-            $id = (int)Tools::getValue('id');
-            $list = new S2iLists($id);
+    private function handleCreateSection()
+    {
+        $section = new Sections();
+        $section->name = Tools::getValue('name');
+        $section->active = Tools::getValue('active') ? 1 : 0;
+        $section->slider = Tools::getValue('slider') ? 1 : 0;
+        $section->speed = $section->slider ? Tools::getValue('speed') : null;
 
-            if (Validate::isLoadedObject($list)) {
+        if (!$section->add()) {
+            $this->errors[] = $this->module->l('Error while creating section.');
+            return;
+        }
 
-                if (Tools::isSubmit('submitModify')) {
+        $section_id = $section->id;
 
-                    $list->name = Tools::getValue('name');
-                    $list->active = (int)Tools::getValue('active');
-                    $list->slider = (int)Tools::getValue('slider');
-                    $list->speed = (int)Tools::getValue('speed');
+        $detail = new SectionDetails();
+        $detail->id_s2i_section = $section_id;
+        $detail->only_title = Tools::getValue('only_title');
+        $detail->active = Tools::getValue('active');
+        if (!$detail->add()) {
+            $this->errors[] = $this->module->l('Error while creating section details.');
+            return;
+        }
 
-                    if ($list->update()) {
-                        $this->confirmations[] = $this->trans('La liste a été modifiée avec succès.', [], 'Modules.S2iUpdateImg.Admin');
-                        Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules') . '&configure=' . $this->module->name . '&conf=4');
-                    } else {
-                        $this->errors[] = $this->trans('Erreur : Impossible de modifier cette liste.', [], 'Modules.S2iUpdateImg.Admin');
-                    }
-                } else {
+        $detail_id = $detail->id;
 
-                    $this->context->smarty->assign([
-                        'list' => $list,
-                        'hooks' => ['home', 'footer', 'header'],
-                        'advanced_options_link' => $this->context->link->getAdminLink('AdminS2iImage') . '&action=advanced_options&id=' . $id,
-                    ]);
+        $languages = Language::getLanguages();
+        foreach ($languages as $lang) {
+            $detail_lang = new SectionDetailsLang();
+            $detail_lang->id_s2i_detail = $detail_id;
+            $detail_lang->id_lang = $lang['id_lang'];
+            $detail_lang->title = Tools::getValue('title_' . $lang['id_lang']);
+            $detail_lang->legend = Tools::getValue('legend_' . $lang['id_lang']);
+            $detail_lang->url = Tools::getValue('url_' . $lang['id_lang']);
 
-                    // Charger le template de modification
-                    $this->setTemplate('modify.tpl');
-                }
-            } else {
-                $this->errors[] = $this->trans('Erreur : Objet introuvable pour la modification.', [], 'Modules.S2iUpdateImg.Admin');
+            $this->uploadImageForLang($detail_lang, 'image_' . $lang['id_lang'], $section->name . '-' . $section_id);
+            if (Tools::getValue('image_mobile')) {
+                $this->uploadImageForLang($detail_lang, 'image_mobile_' . $lang['id_lang'], $section->name . '-' . $section_id . '-m');
+            }
+
+            if (!$detail_lang->add()) {
+                $this->errors[] = $this->module->l('Error while saving section details in each language.');
             }
         }
     }
-    private function handleCreateList()
 
+    private function uploadImageForLang($detail_lang, $image_input_name, $filename_prefix)
     {
-        $name = Tools::getValue('name');
-        $active = Tools::getValue('active') ? 1 : 0;
-        $slider = Tools::getValue('slider') ? 1 : 0;
-        $speed = Tools::getValue('speed') ? (int)Tools::getValue('speed') : 5000;
-        $imagePath = null;
-
-        if ($name) {
-            $list = new S2iLists();
-            $list->name = $name;
-            $list->active = $active;
-            $list->slider = $slider;
-            $list->speed = $slider ? $speed : null;
-
-            // Normalisation du nom pour le fichier
-            $safeName = Tools::str2url($name);
-
-            // Vérifie si "Image pour mobile" est cochée via `is_mobile_image dans le configuration.tpl`
-            $isMobileImage = Tools::getValue('is_mobile_image') ? '-m-' : '-';
-
-            // Gestion de l'upload de l'image principale
-            if (isset($_FILES['image']) && !empty($_FILES['image']['name'])) {
-                // Ajoute le suffixe "-m-" si nécessaire
-                $imageName = $safeName . $isMobileImage . uniqid() . '.jpg';
-                $uploadDir = _PS_IMG_DIR_ . 's2i_update_img/';
-
-                // Création du dossier si inexistant
-                if (!file_exists($uploadDir)) {
-                    mkdir($uploadDir, 0755, true);
-                }
-
-                $uploadPath = $uploadDir . $imageName;
-
-                if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadPath)) {
-                    $imagePath = 's2i_update_img/' . $imageName;
-                    $list->image = $imagePath;
-                } else {
-                    $this->errors[] = $this->trans('Erreur lors du téléchargement de l\'image.');
-                }
-            }
-
-
-            if ($list->add()) {
-                $this->confirmations[] = $this->trans('La nouvelle liste a été créée avec succès.');
-                Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules') . '&configure=' . $this->module->name . '&conf=1');
-            } else {
-                $this->errors[] = $this->trans('Erreur : Impossible de créer la liste.');
-            }
-        } else {
-            $this->errors[] = $this->trans('Erreur : Le nom de la liste est requis.');
+        $image = $_FILES[$image_input_name];
+        if ($image['size'] > 0) {
+            $filename = $filename_prefix . '.' . pathinfo($image['name'], PATHINFO_EXTENSION);
+            move_uploaded_file($image['tmp_name'], _PS_IMG_DIR_ . $filename);
+            $detail_lang->image = $filename;
         }
     }
 }
