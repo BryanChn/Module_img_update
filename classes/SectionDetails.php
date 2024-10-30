@@ -15,4 +15,10 @@ class SectionDetails extends ObjectModel
             'only_title' => ['type' => self::TYPE_BOOL, 'validate' => 'isBool', 'required' => false],
         ],
     ];
+
+    public static function getBySectionId($id_section)
+    {
+        $sql = 'SELECT * FROM ' . _DB_PREFIX_ . 's2i_section_details WHERE id_s2i_section = ' . (int)$id_section;
+        return Db::getInstance()->getRow($sql);
+    }
 }

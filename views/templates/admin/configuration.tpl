@@ -1,4 +1,4 @@
-*<h2>Gestion des Sections</h2>
+<h2>Gestion des Sections</h2>
 
 
 <a href="#" id="show-create-section-form" class="btn btn-primary mb-3">+ </a>

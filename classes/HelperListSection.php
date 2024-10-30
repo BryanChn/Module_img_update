@@ -20,15 +20,10 @@ class HelperListSection
         $helper->table = 's2i_sections';
         $helper->identifier = 'id_s2i_section';
         $helper->token = Tools::getAdminTokenLite('AdminModules');
-        $helper->shopLinkType = ''; // Utilisé pour indiquer la présence de liens multi-boutiques
-        $helper->actions = ['edit', 'delete'];
-
-
-        $helper->simple_header = true;
-
-
-
+        $helper->shopLinkType = '';
         $helper->currentIndex = AdminController::$currentIndex . '&configure=' . $module->name;
+        $helper->actions = ['edit', 'delete'];
+        $helper->simple_header = true;
 
         // Définition des champs pour la liste
         $fields_list = [

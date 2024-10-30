@@ -1,6 +1,6 @@
 <?php
 
-use Language;
+
 
 
 
@@ -15,15 +15,21 @@ class Create_section_form
         $this->context = Context::getContext();
     }
 
+
     public function renderForm()
     {
         $languages = Language::getLanguages();
         $lang_id = $this->context->language->id;
+        foreach ($languages as &$language) {
+            if (!isset($language['is_default'])) {
+                $language['is_default'] = 0; // Définir `is_default` à 0 si non défini
+            }
+        }
 
         $fields_form = [
             'form' => [
                 'legend' => [
-                    'title' => $this->module->l('Create Section'),
+                    'title' => $this->module->l('Créer une nouvelle section'),
                 ],
                 'input' => [
                     [
@@ -34,18 +40,18 @@ class Create_section_form
                     ],
                     [
                         'type' => 'switch',
-                        'label' => $this->module->l('Active'),
+                        'label' => $this->module->l('Actif'),
                         'name' => 'active',
                         'values' => [
                             [
                                 'id' => 'active_on',
                                 'value' => 1,
-                                'label' => $this->module->l('Yes')
+                                'label' => $this->module->l('Oui')
                             ],
                             [
                                 'id' => 'active_off',
                                 'value' => 0,
-                                'label' => $this->module->l('No')
+                                'label' => $this->module->l('Non')
                             ]
                         ],
                     ],
@@ -57,83 +63,110 @@ class Create_section_form
                             [
                                 'id' => 'slider_on',
                                 'value' => 1,
-                                'label' => $this->module->l('Yes')
+                                'label' => $this->module->l('Oui')
                             ],
                             [
                                 'id' => 'slider_off',
                                 'value' => 0,
-                                'label' => $this->module->l('No')
+                                'label' => $this->module->l('Non')
                             ]
                         ],
-                        'desc' => $this->module->l('If enabled, you can set a speed.'),
+                        'desc' => $this->module->l('Si activé, vous pouvez choissir sa vitesse.'),
                     ],
                     [
                         'type' => 'text',
-                        'label' => $this->module->l('Speed'),
+                        'label' => $this->module->l('Vitesse'),
                         'name' => 'speed',
-                        'desc' => $this->module->l('Speed of the slider in ms.'),
+                        'desc' => $this->module->l('Vitesse en millisecondes'),
                         'required' => false,
                     ],
                     [
                         'type' => 'switch',
-                        'label' => $this->module->l('Only Title'),
+                        'label' => $this->module->l('Titre seulement ?'),
                         'name' => 'only_title',
                         'values' => [
                             [
                                 'id' => 'only_title_on',
                                 'value' => 1,
-                                'label' => $this->module->l('Yes')
+                                'label' => $this->module->l('Oui')
                             ],
                             [
                                 'id' => 'only_title_off',
                                 'value' => 0,
-                                'label' => $this->module->l('No')
+                                'label' => $this->module->l('Non')
                             ]
                         ],
-                        'desc' => $this->module->l('If enabled, only the title is required.'),
+                        'desc' => $this->module->l('Si activé, seul le titre sera affiché.'),
+                    ],
+                    [
+                        'type' => 'text',
+                        'label' => $this->module->l('Titre'),
+                        'name' => 'title',
+                        'lang' => true,
+                        'required' => false,
+                    ],
+                    [
+                        'type' => 'text',
+                        'label' => $this->module->l('Légende'),
+                        'name' => 'legend',
+                        'lang' => true,
+                        'required' => false,
+                    ],
+                    [
+                        'type' => 'text',
+                        'label' => $this->module->l('URL'),
+                        'name' => 'url',
+                        'lang' => true,
+                        'required' => false,
+                    ],
+                    [
+                        'type' => 'switch',
+                        'label' => $this->module->l('Image pour mobile ?'),
+                        'name' => 'image_mobile_enabled',
+                        'values' => [
+                            [
+                                'id' => 'image_mobile_enabled_on',
+                                'value' => 1,
+                                'label' => $this->module->l('Oui')
+                            ],
+                            [
+                                'id' => 'image_mobile_enabled_off',
+                                'value' => 0,
+                                'label' => $this->module->l('Non')
+                            ]
+                        ],
+                        'desc' => $this->module->l('Si activé, l\'image sera affichée sur mobile.'),
+                    ],
+
+                    [
+                        'type' => 'file',
+                        'label' => $this->module->l('Image'),
+                        'name' => 'image',
+                        'lang' => true,
+                        'required' => false,
+                        'desc' => $this->module->l('Telecharger une image pour cette section.'),
                     ],
                 ],
                 'submit' => [
-                    'title' => $this->module->l('Save'),
-                    'class' => 'btn btn-default pull-right'
+                    'title' => $this->module->l('Enregistrer'),
+                    'class' => 'btn btn-default pull-right',
+
+
                 ]
             ],
         ];
 
-        // Champs multilingues pour les détails de la section
-        foreach ($languages as $lang) {
-            $fields_form['form']['input'][] = [
-                'type' => 'text',
-                'label' => $this->module->l('Title') . ' (' . $lang['name'] . ')',
-                'name' => 'title_' . $lang['id_lang'],
-                'lang' => true,
-                'required' => false,
-            ];
-            $fields_form['form']['input'][] = [
-                'type' => 'text',
-                'label' => $this->module->l('Legend') . ' (' . $lang['name'] . ')',
-                'name' => 'legend_' . $lang['id_lang'],
-                'lang' => true,
-                'required' => false,
-            ];
-            $fields_form['form']['input'][] = [
-                'type' => 'text',
-                'label' => $this->module->l('URL') . ' (' . $lang['name'] . ')',
-                'name' => 'url_' . $lang['id_lang'],
-                'lang' => true,
-                'required' => false,
-            ];
-            $fields_form['form']['input'][] = [
-                'type' => 'file',
-                'label' => $this->module->l('Image') . ' (' . $lang['name'] . ')',
-                'name' => 'image_' . $lang['id_lang'],
-                'lang' => true,
-                'required' => false,
-                'desc' => $this->module->l('Upload an image for this language.')
-            ];
-        }
 
         $helper = new HelperForm();
+        $helper->fields_value = [
+            'name' => Tools::getValue('name', ''),
+            'active' => Tools::getValue('active', 0),
+            'slider' => Tools::getValue('slider', 0),
+            'speed' => Tools::getValue('speed', 5000),
+            'only_title' => Tools::getValue('only_title', 0),
+            'image_mobile_enabled' => Tools::getValue('image_mobile_enabled', 0),
+            'is_default' => Tools::getValue('is_default', 0)
+        ];
         $helper->module = $this->module;
         $helper->name_controller = 'create_section_form';
         $helper->token = Tools::getAdminTokenLite('AdminModules');
@@ -142,6 +175,8 @@ class Create_section_form
         $helper->title = $this->module->l('Create New Section');
         $helper->submit_action = 'submit_create_section';
         $helper->currentIndex = AdminController::$currentIndex . '&configure=' . $this->module->name;
+
+
 
         return $helper->generateForm([$fields_form]);
     }
