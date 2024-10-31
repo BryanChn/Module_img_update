@@ -103,21 +103,21 @@ class Create_section_form
                         'label' => $this->module->l('Titre'),
                         'name' => 'title',
                         'lang' => true,
-                        'required' => false,
+                        'required' => true,
                     ],
                     [
                         'type' => 'text',
                         'label' => $this->module->l('Légende'),
                         'name' => 'legend',
                         'lang' => true,
-                        'required' => false,
+                        'required' => true,
                     ],
                     [
                         'type' => 'text',
                         'label' => $this->module->l('URL'),
                         'name' => 'url',
                         'lang' => true,
-                        'required' => false,
+                        'required' => true,
                     ],
                     [
                         'type' => 'switch',
@@ -138,15 +138,8 @@ class Create_section_form
                         'desc' => $this->module->l('Si activé, l\'image sera affichée sur mobile.'),
                     ],
 
-                    [
-                        'type' => 'file',
-                        'label' => $this->module->l('Image'),
-                        'name' => 'image',
-                        'lang' => true,
-                        'required' => false,
-                        'desc' => $this->module->l('Telecharger une image pour cette section.'),
-                    ],
                 ],
+
                 'submit' => [
                     'title' => $this->module->l('Enregistrer'),
                     'class' => 'btn btn-default pull-right',
@@ -155,6 +148,17 @@ class Create_section_form
                 ]
             ],
         ];
+        // gestion des images pour chaques langues 
+        foreach ($languages as $lang) {
+            $fields_form['form']['input'][] = [
+                'type' => 'file',
+                'label' => $this->module->l('Image') . ' (' . $lang['name'] . ')',
+                'name' => 'image_' . $lang['id_lang'],
+                'lang' => true,
+                'required' => false,
+                'desc' => $this->module->l('Télécharger une image pour cette section.'),
+            ];
+        }
 
 
         $helper = new HelperForm();
@@ -165,7 +169,8 @@ class Create_section_form
             'speed' => Tools::getValue('speed', 5000),
             'only_title' => Tools::getValue('only_title', 0),
             'image_mobile_enabled' => Tools::getValue('image_mobile_enabled', 0),
-            'is_default' => Tools::getValue('is_default', 0)
+            'is_default' => Tools::getValue('is_default', 0),
+
         ];
         $helper->module = $this->module;
         $helper->name_controller = 'create_section_form';
@@ -175,7 +180,6 @@ class Create_section_form
         $helper->title = $this->module->l('Create New Section');
         $helper->submit_action = 'submit_create_section';
         $helper->currentIndex = AdminController::$currentIndex . '&configure=' . $this->module->name;
-
 
 
         return $helper->generateForm([$fields_form]);

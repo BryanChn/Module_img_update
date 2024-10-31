@@ -15,10 +15,8 @@ class AdminS2iImageController extends ModuleAdminController
 
     public function postProcess()
     {
-
         $this->confirmations[] = $this->trans('postProcess called.', [], 'Modules.S2iUpdateImg.Admin');
         $action = Tools::getValue('action');
-
 
         if ($action === 'delete' && Tools::getValue('id')) {
             $this->handleDeleteSection();
@@ -85,6 +83,19 @@ class AdminS2iImageController extends ModuleAdminController
         $section->slider = (int) Tools::getValue('slider');
         $section->speed = (int) Tools::getValue('speed');
 
+        // verification en db si une section existe déjà avec le même nom
+        $sectionName = Tools::getValue('name');
+        $existingSection = Db::getInstance()->getValue(
+            'SELECT id_s2i_section FROM ' . _DB_PREFIX_ . 's2i_sections WHERE name = "' . $sectionName . '"'
+        );
+        if ($existingSection) {
+            // Si une section avec le même nom existe, on ajoute une erreur
+            $this->errors[] = $this->trans('Une section avec ce nom existe déjà. Veuillez choisir un nom unique.', [], 'Modules.S2iUpdateImg.Admin');
+            return false;
+        }
+
+
+
         // Sauvegarde de la section principale
         if ($section->add()) { // `add()` crée un nouvel enregistrement et génère un ID pour la section
             $section_id = $section->id;
@@ -106,10 +117,34 @@ class AdminS2iImageController extends ModuleAdminController
                 $title = Tools::getValue('title_' . $lang_id);
                 $legend = Tools::getValue('legend_' . $lang_id);
                 $url = Tools::getValue('url_' . $lang_id);
+                $imagePath = '';
+
+                $safeName = Tools::str2url($section->name);
+
+                // Gestion du nom de l'image avec le suffixe mobile si nécessaire
+                $isMobileImage = (int) Tools::getValue('image_mobile_enabled') ? '-m-' : '-';
+                if (isset($_FILES['image_' . $lang_id]) && !empty($_FILES['image_' . $lang_id]['name'])) {
+                    $extension = pathinfo($_FILES['image_' . $lang_id]['name'], PATHINFO_EXTENSION);
+                    $imageName = $safeName . $lang_id . $isMobileImage . '.' . $extension; // Format: NomSection+IDlang+(mobile suffix)+extension
+                    $uploadDir = _PS_IMG_DIR_ . 's2i_update_img/';
+
+                    // Création du dossier si inexistant
+                    if (!file_exists($uploadDir)) {
+                        mkdir($uploadDir, 0755, true);
+                    }
+
+                    $uploadPath = $uploadDir . $imageName;
+
+                    if (move_uploaded_file($_FILES['image_' . $lang_id]['tmp_name'], $uploadPath)) {
+                        $imagePath = 's2i_update_img/' . $imageName;
+                    } else {
+                        die('Erreur lors du déplacement du fichier : ' . $_FILES['image_' . $lang_id]['error']);
+                    }
+                } else {
+                    $imagePath = ''; // Si aucune image n'est uploadée, on laisse ce champ vide.
+                }
 
 
-                //gestion image 
-                $imagePath = $this->handleImageUpload($lang_id);
 
                 // Insertion dans `ps_s2i_section_details_lang`
                 $sectionDetailsLang = [
@@ -121,40 +156,9 @@ class AdminS2iImageController extends ModuleAdminController
                     'image' => $imagePath,
 
                 ];
+
                 Db::getInstance()->insert('s2i_section_details_lang', $sectionDetailsLang);
             }
         }
-    }
-
-    public function handleImageUpload($lang_id)
-    {
-        // Vérifie si le champ de l'image existe et contient un fichier
-        if (isset($_FILES['image_' . $lang_id]) && !empty($_FILES['image_' . $lang_id]['name'])) {
-            // Récupère l'extension du fichier
-            $extension = pathinfo($_FILES['image_' . $lang_id]['name'], PATHINFO_EXTENSION);
-
-            // Définition du dossier d'upload
-            $uploadDir = _PS_IMG_DIR_ . 's2i_update_img/';
-
-            // Création du dossier si inexistant
-            if (!file_exists($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
-            }
-
-            // Chemin final de l'image (garde le nom d'origine)
-            $uploadPath = $uploadDir . basename($_FILES['image_' . $lang_id]['name']);
-
-            // Déplace l'image dans le dossier
-            if (move_uploaded_file($_FILES['image_' . $lang_id]['tmp_name'], $uploadPath)) {
-                // Renvoie le chemin de l'image pour l'enregistrer en base de données ou autre
-                return 's2i_update_img/' . basename($_FILES['image_' . $lang_id]['name']);
-            } else {
-                // Affiche une erreur si le déplacement échoue
-                $this->errors[] = $this->trans('Erreur lors du téléchargement de l\'image.');
-                return false;
-            }
-        }
-
-        return null;
     }
 }

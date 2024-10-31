@@ -155,7 +155,7 @@ class S2i_Update_Img extends Module
         $form = new Create_section_form($this);
         $section_form = $form->renderForm();
         $sectionsList = $this->getSection();
-        $modify_link = $this->context->link->getAdminLink('AdminModules', true) . '&configure=' . $this->name . '&action=modify&id=';
+
 
 
 
@@ -163,7 +163,7 @@ class S2i_Update_Img extends Module
         $this->context->smarty->assign([
             'section_form' => $section_form,
             'sectionsList' => $sectionsList,
-            // 'editForm' => $editForm,
+
         ]);
 
         return $this->context->smarty->fetch($this->local_path . 'views/templates/admin/configuration.tpl');
