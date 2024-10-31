@@ -103,7 +103,7 @@ class S2i_Update_Img extends Module
             FOREIGN KEY (`id_s2i_detail`) REFERENCES `' . _DB_PREFIX_ . 's2i_section_details`(`id_s2i_detail`) ON DELETE CASCADE
         ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
-        // Exécution de chaque requête
+
         foreach ($sql as $query) {
             if (!Db::getInstance()->execute($query)) {
                 return false;
@@ -137,9 +137,19 @@ class S2i_Update_Img extends Module
             $controller->postProcess();
         }
 
+        // redirection lorsque l'on clique sur edit dans la liste des sections
+        if (Tools::getValue('action') === 'edit' && Tools::getValue('id_s2i_section')) {
+            $id_s2i_section = (int)Tools::getValue('id_s2i_section');
+            $editForm = HelperEditSection::renderEditForm($this, $id_s2i_section);
 
-        // $editSectionForm = new HelperEditSection($this);
-        $editForm = HelperEditSection::renderEditForm();
+            // Assigner le formulaire généré à Smarty
+            $this->context->smarty->assign([
+                'editForm' => $editForm,
+            ]);
+
+            // Charger le template d'édition
+            return $this->context->smarty->fetch($this->local_path . 'views/templates/admin/edit_section.tpl');
+        }
 
 
         $form = new Create_section_form($this);
@@ -153,7 +163,7 @@ class S2i_Update_Img extends Module
         $this->context->smarty->assign([
             'section_form' => $section_form,
             'sectionsList' => $sectionsList,
-            'editForm' => $editForm,
+            // 'editForm' => $editForm,
         ]);
 
         return $this->context->smarty->fetch($this->local_path . 'views/templates/admin/configuration.tpl');

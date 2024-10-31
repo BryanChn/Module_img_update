@@ -18,7 +18,7 @@ class AdminS2iImageController extends ModuleAdminController
 
         $this->confirmations[] = $this->trans('postProcess called.', [], 'Modules.S2iUpdateImg.Admin');
         $action = Tools::getValue('action');
-        var_dump($action);
+
 
         if ($action === 'delete' && Tools::getValue('id')) {
             $this->handleDeleteSection();
@@ -26,78 +26,39 @@ class AdminS2iImageController extends ModuleAdminController
             $this->handleCreateSection();
         } elseif (Tools::isSubmit('submit_update_section')) {
             $this->handleUpdateSection();
-        } elseif (Tools::getValue('action') === 'edit' && Tools::getValue('id_s2i_section')) {
-            return HelperEditSection::renderEditForm($this, (int)Tools::getValue('id_s2i_section'));
         }
-
-
-        parent::postProcess();
     }
 
-    public function renderEditList($id_s2i_section)
-    {
-        // Recherchez la section et ses détails
-        $section = new Sections($id_s2i_section);
-        $details = SectionDetails::getBySectionId($id_s2i_section);
-        $languages = Language::getLanguages();
 
-        $sectionDetailsLang = [];
-        foreach ($languages as $lang) {
-            $sectionDetailsLang[$lang['id_lang']] = SectionDetailsLang::getByDetailAndLang($details['id_s2i_detail'], $lang['id_lang']);
-        }
-
-        // Assignez les données à Smarty pour l'affichage
-        $this->context->smarty->assign([
-            'section' => $section,
-            'details' => $details,
-            'sectionDetailsLang' => $sectionDetailsLang,
-            'languages' => $languages,
-            'currentIndex' => AdminController::$currentIndex,
-            'token' => Tools::getAdminTokenLite('AdminModules')
-        ]);
-
-        // Retournez le rendu du template d'édition
-        return $this->context->smarty->fetch($this->module->getLocalPath() . 'views/templates/admin/edit_section.tpl');
-    }
 
     private function handleUpdateSection()
     {
-        $id_section = (int)Tools::getValue('id_section');
-        $section = new Sections($id_section);
+        $id_s2i_section = (int)Tools::getValue('id_s2i_section');
+        $section = new Sections($id_s2i_section);
         $section->name = Tools::getValue('name');
-        $section->active = Tools::getValue('active') ? 1 : 0;
-        $section->slider = Tools::getValue('slider') ? 1 : 0;
+        $section->active = Tools::getValue('active');
+        $section->slider = Tools::getValue('slider');
         $section->speed = Tools::getValue('speed');
 
         if (!$section->update()) {
-            $this->errors[] = $this->module->l('Error while updating section.');
+            $this->errors[] = $this->trans('Failed to update section');
         }
 
-        $detail = SectionDetails::getBySectionId($id_section);
-        $detail->only_title = Tools::getValue('only_title');
-        $detail->active = Tools::getValue('active');
-
-        if (!$detail->update()) {
-            $this->errors[] = $this->module->l('Error while updating section details.');
-        }
-
+        // Mise à jour des détails multilingues
         $languages = Language::getLanguages();
         foreach ($languages as $lang) {
-            $detail_lang = new SectionDetailsLang($detail->id, $lang['id_lang']);
+            $detail_lang = new SectionDetailsLang($section->id, $lang['id_lang']);
             $detail_lang->title = Tools::getValue('title_' . $lang['id_lang']);
             $detail_lang->legend = Tools::getValue('legend_' . $lang['id_lang']);
-            $detail_lang->url = Tools::getValue('url_' . $lang['id_lang']);
-
-            // Gestion de l'image si une nouvelle est uploadée
-            $this->uploadImageForLang($detail_lang, 'image_' . $lang['id_lang'], $section->name . '-' . $id_section);
 
             if (!$detail_lang->update()) {
-                $this->errors[] = $this->module->l('Error while updating section details in each language.');
+                $this->errors[] = $this->trans('Failed to update multilingual fields');
             }
         }
 
+        // Redirection en cas de succès
         if (empty($this->errors)) {
-            $this->confirmations[] = $this->module->l('Section mise à jour avec succès.');
+            $this->confirmations[] = $this->trans('Section updated successfully');
             Tools::redirectAdmin(AdminController::$currentIndex . '&configure=' . $this->module->name . '&token=' . Tools::getAdminTokenLite('AdminModules'));
         }
     }
@@ -115,59 +76,67 @@ class AdminS2iImageController extends ModuleAdminController
         }
     }
 
-    private function handleCreateSection()
+    public function handleCreateSection()
     {
+        // Création de la section principale
         $section = new Sections();
         $section->name = Tools::getValue('name');
-        $section->active = Tools::getValue('active') ? 1 : 0;
-        $section->slider = Tools::getValue('slider') ? 1 : 0;
-        $section->speed = $section->slider ? Tools::getValue('speed') : null;
+        $section->active = (int) Tools::getValue('active');
+        $section->slider = (int) Tools::getValue('slider');
+        $section->speed = (int) Tools::getValue('speed');
 
-        // Ajouter la section en base de données pour générer un ID
-        if (!$section->add()) {  // Ajout de la section en base
-            $this->errors[] = $this->module->l('Error while creating section.');
-            return; // Arrêter si l'ajout échoue
-        }
+        // Sauvegarde de la section principale
+        if ($section->add()) { // `add()` crée un nouvel enregistrement et génère un ID pour la section
+            $section_id = $section->id;
 
-        $section_id = $section->id; // Récupérer l'ID généré de la section
+            // Insertion dans `ps_s2i_section_details`
+            $sectionDetails = [
+                'id_s2i_section' => $section_id,
+                'active' => (int) Tools::getValue('active'),
+                'only_title' => (int) Tools::getValue('only_title'),
+                'image_is_mobile' => (int) Tools::getValue('image_mobile_enabled'),
+            ];
+            Db::getInstance()->insert('s2i_section_details', $sectionDetails);
+            $section_detail_id = Db::getInstance()->Insert_ID();
 
-        $detail = new SectionDetails();
-        $detail->id_s2i_section = $section_id; // Utiliser l'ID de la section générée
-        $detail->only_title = Tools::getValue('only_title');
-        $detail->active = Tools::getValue('active');
+            // Insertion des données multilingues dans `ps_s2i_section_details_lang`
+            $languages = Language::getLanguages();
+            foreach ($languages as $lang) {
+                $lang_id = (int) $lang['id_lang'];
+                $title = Tools::getValue('title_' . $lang_id);
+                $legend = Tools::getValue('legend_' . $lang_id);
+                $url = Tools::getValue('url_' . $lang_id);
 
-        if (!$detail->add()) {
-            $this->errors[] = $this->module->l('Error while creating section details.');
-            return;
-        }
+                // Gestion du nom d'image + ajout -m- si l'image est pour mobile
+                $image_name = '';
+                if (isset($_FILES['image_' . $lang_id]) && !empty($_FILES['image_' . $lang_id]['name'])) {
+                    // Récupérer l'extension de l'image
+                    $extension = pathinfo($_FILES['image_' . $lang_id]['name'], PATHINFO_EXTENSION);
+                    // Construire le nom de fichier selon le format demandé
+                    $image_name = $section->name . '_' . $lang_id;
+                    $image_name .= ((int) Tools::getValue('image_mobile_enabled') === 1) ? '-m-' : '';
+                    $image_name .= '.' . $extension;
 
-        $detail_id = $detail->id;
-
-        $languages = Language::getLanguages();
-        foreach ($languages as $lang) {
-            $detail_lang = new SectionDetailsLang();
-            $detail_lang->id_s2i_detail = $detail_id;
-            $detail_lang->id_lang = $lang['id_lang'];
-            $detail_lang->title = Tools::getValue('title_' . $lang['id_lang']);
-            $detail_lang->legend = Tools::getValue('legend_' . $lang['id_lang']);
-            $detail_lang->url = Tools::getValue('url_' . $lang['id_lang']);
-
-            // Gestion de l'image pour chaque langue
-            $this->uploadImageForLang($detail_lang, 'image_' . $lang['id_lang'], $section->name . '-' . $section_id);
-            if (Tools::getValue('image_mobile')) {
-                $this->uploadImageForLang($detail_lang, 'image_mobile_' . $lang['id_lang'], $section->name . '-' . $section_id . '-m');
+                    // Chemin de destination
+                    $destination = _PS_IMG_DIR_ . 's2i_sections/' . $image_name;
+                    move_uploaded_file($_FILES['image_' . $lang_id]['tmp_name'], $destination);
+                }
+                // Insertion dans `ps_s2i_section_details_lang`
+                $sectionDetailsLang = [
+                    'id_s2i_detail' => $section_detail_id,
+                    'id_lang' => $lang_id,
+                    'title' => $title,
+                    'legend' => $legend,
+                    'url' => $url,
+                    'image' => $image_name,
+                ];
+                Db::getInstance()->insert('s2i_section_details_lang', $sectionDetailsLang);
             }
-
-            if (!$detail_lang->add()) {
-                $this->errors[] = $this->module->l('Error while saving section details in each language.');
-            }
         }
-
-        if (empty($this->errors)) {
-            $this->confirmations[] = $this->module->l('Section créée avec succès.');
-            Tools::redirectAdmin(AdminController::$currentIndex . '&configure=' . $this->module->name . '&token=' . Tools::getAdminTokenLite('AdminModules'));
-        }
+        // var_dump(Tools::getAllValues());
+        // die();
     }
+
     private function uploadImageForLang($detail_lang, $image_input_name, $filename_prefix)
     {
         $image = $_FILES[$image_input_name];

@@ -21,7 +21,7 @@ class HelperListSection
         $helper->identifier = 'id_s2i_section';
         $helper->token = Tools::getAdminTokenLite('AdminModules');
         $helper->shopLinkType = '';
-        $helper->currentIndex = AdminController::$currentIndex . '&configure=' . $module->name;
+        $helper->currentIndex = AdminController::$currentIndex . '&configure=' . $module->name . '&action=edit';
         $helper->actions = ['edit', 'delete'];
         $helper->simple_header = true;
 

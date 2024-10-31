@@ -1,124 +1,162 @@
 <?php
+
 class HelperEditSection
 {
-
-    public static function getAllinfoSection()
+    public static function renderEditForm($module, $id_s2i_section)
     {
-        $sql = 'SELECT * FROM ' . _DB_PREFIX_ . 's2i_sections';
-        return Db::getInstance()->executeS($sql);
-    }
-    public static function renderEditForm()
-    {
-        // Récupération de l'ID de la section depuis la requête
-        $id_s2i_section = (int) Tools::getValue('id_s2i_section');
 
-        // Récupérer les informations de la section et des tables liées
+        // Récupération des informations de la section et des tables liées
         $section = new Sections($id_s2i_section);
         $details = SectionDetails::getBySectionId($id_s2i_section);
         $languages = Language::getLanguages();
-
-        // Création de l'instance HelperForm
+        foreach ($languages as &$language) {
+            if (!isset($language['is_default'])) {
+                $language['is_default'] = 0;
+            }
+        }
         $helper = new HelperForm();
+        $helper->module = $module;
         $helper->submit_action = 'submitUpdateSection';
-        $helper->currentIndex = AdminController::$currentIndex . '&configure=' . Tools::getValue('configure') . '&id_s2i_section=' . $id_s2i_section;
+        $helper->currentIndex = AdminController::$currentIndex . '&configure=' . $module->name . '&id_s2i_section=' . $id_s2i_section;
         $helper->token = Tools::getAdminTokenLite('AdminModules');
-        $helper->title = 'Edit Section';
+        $helper->title = 'Modifier la Section';
+        $helper->default_form_language = Context::getContext()->language->id;
+        $helper->languages = $languages;
 
-        // Définition des champs pour le formulaire
+        // Champs du formulaire
         $fields_form = [
             'form' => [
                 'legend' => [
-                    'title' => 'Modifier la section',
+                    'title' => 'Modifier la Section',
                     'icon' => 'icon-edit'
                 ],
                 'input' => [
                     [
                         'type' => 'text',
-                        'label' => 'Nom',
+                        'label' => $module->l('Nom'),
                         'name' => 'name',
                         'required' => true,
-                        'value' => $section->name,
                     ],
                     [
                         'type' => 'switch',
-                        'label' => 'Actif',
+                        'label' => $module->l('Actif'),
                         'name' => 'active',
                         'is_bool' => true,
                         'values' => [
                             [
                                 'id' => 'active_on',
                                 'value' => 1,
-                                'label' => 'Enabled'
+                                'label' => $module->l('Oui')
                             ],
                             [
                                 'id' => 'active_off',
                                 'value' => 0,
-                                'label' => 'Disabled'
+                                'label' => $module->l('Non')
                             ]
                         ],
-                        'value' => $section->active,
                     ],
                     [
                         'type' => 'switch',
-                        'label' => 'Slider',
+                        'label' => $module->l('Slider'),
                         'name' => 'slider',
                         'is_bool' => true,
                         'values' => [
                             [
                                 'id' => 'slider_on',
                                 'value' => 1,
-                                'label' => 'Oui'
+                                'label' => $module->l('Oui')
                             ],
                             [
                                 'id' => 'slider_off',
                                 'value' => 0,
-                                'label' => 'Non'
+                                'label' => $module->l('Non')
                             ]
                         ],
-                        'value' => $section->slider,
+                        'desc' => $module->l('Si activé, vous pouvez choisir sa vitesse.'),
                     ],
                     [
                         'type' => 'text',
-                        'label' => 'Vitesse',
+                        'label' => $module->l('Vitesse'),
                         'name' => 'speed',
-                        'value' => $section->speed,
+                        'desc' => $module->l('Vitesse en millisecondes'),
+                    ],
+                    [
+                        'type' => 'switch',
+                        'label' => $module->l('Titre seulement ?'),
+                        'name' => 'only_title',
+                        'is_bool' => true,
+                        'values' => [
+                            [
+                                'id' => 'only_title_on',
+                                'value' => 1,
+                                'label' => $module->l('Oui')
+                            ],
+                            [
+                                'id' => 'only_title_off',
+                                'value' => 0,
+                                'label' => $module->l('Non')
+                            ]
+                        ],
+                        'desc' => $module->l('Si activé, seul le titre sera affiché.'),
+                    ],
+                    [
+                        'type' => 'switch',
+                        'label' => $module->l('Image pour mobile ?'),
+                        'name' => 'image_mobile_enabled',
+                        'is_bool' => true,
+                        'values' => [
+                            [
+                                'id' => 'image_mobile_enabled_on',
+                                'value' => 1,
+                                'label' => $module->l('Oui')
+                            ],
+                            [
+                                'id' => 'image_mobile_enabled_off',
+                                'value' => 0,
+                                'label' => $module->l('Non')
+                            ]
+                        ],
+                        'desc' => $module->l('Si activé, l\'image sera affichée sur mobile.'),
+                    ],
+                    [
+                        'type' => 'text',
+                        'label' => $module->l('Titre'),
+                        'name' => 'title',
+                        'lang' => true,
+                        'required' => false,
+                    ],
+                    [
+                        'type' => 'text',
+                        'label' => $module->l('Légende'),
+                        'name' => 'legend',
+                        'lang' => true,
+                        'required' => false,
+                    ],
+                    [
+                        'type' => 'text',
+                        'label' => $module->l('URL'),
+                        'name' => 'url',
+                        'lang' => true,
+                        'required' => false,
+                    ],
+                    [
+                        'type' => 'file',
+                        'label' => $module->l('Image'),
+                        'name' => 'image',
+                        'lang' => true,
+                        'required' => false,
+                        'desc' => $module->l('Télécharger une image pour cette section.'),
                     ],
                 ],
                 'submit' => [
-                    'title' => 'Enregistrer les modifications',
+                    'title' => $module->l('Enregistrer les modifications'),
                     'class' => 'btn btn-default pull-right'
                 ]
             ]
         ];
 
-        // Ajouter les champs multilingues pour les détails
-        foreach ($languages as $lang) {
-            $fields_form['form']['input'][] = [
-                'type' => 'text',
-                'label' => 'Titre (' . $lang['name'] . ')',
-                'name' => 'title_' . $lang['id_lang'],
-                'lang' => true,
-                'value' => $details['title_' . $lang['id_lang']] ?? '',
-            ];
-            $fields_form['form']['input'][] = [
-                'type' => 'textarea',
-                'label' => 'Légende (' . $lang['name'] . ')',
-                'name' => 'legend_' . $lang['id_lang'],
-                'lang' => true,
-                'value' => $details['legend_' . $lang['id_lang']] ?? '',
-            ];
-            $fields_form['form']['input'][] = [
-                'type' => 'file',
-                'label' => 'Image (' . $lang['name'] . ')',
-                'name' => 'image_' . $lang['id_lang'],
-                'lang' => true,
-            ];
-        }
-
-        // Définir les valeurs actuelles des champs pour le formulaire
+        // Valeurs actuelles des champs
         $helper->fields_value = self::getFormValues($section, $details, $languages);
-
-        // Générer le formulaire
 
         return $helper->generateForm([$fields_form]);
     }
@@ -126,16 +164,18 @@ class HelperEditSection
     private static function getFormValues($section, $details, $languages)
     {
         $fields_value = [
-            'name' => $section->name,
-            'active' => $section->active,
-            'slider' => $section->slider,
-            'speed' => $section->speed,
+            'name' => $section->name ?? '',
+            'active' => $section->active ?? 0,
+            'slider' => $section->slider ?? 0,
+            'speed' => $section->speed ?? 5000,
+            'only_title' => $section->only_title ?? 0,
+            'image_mobile_enabled' => $section->image_mobile_enabled ?? 0,
+            'title' => $details['title'] ?? [],
+            'legend' => $details['legend'] ?? [],
+            'url' => $details['url'] ?? [],
+            'image' => $details['image'] ?? [],
         ];
 
-        foreach ($languages as $lang) {
-            $fields_value['title_' . $lang['id_lang']] = $details['title_' . $lang['id_lang']] ?? '';
-            $fields_value['legend_' . $lang['id_lang']] = $details['legend_' . $lang['id_lang']] ?? '';
-        }
         return $fields_value;
     }
 }
