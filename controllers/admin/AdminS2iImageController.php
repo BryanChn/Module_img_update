@@ -107,20 +107,10 @@ class AdminS2iImageController extends ModuleAdminController
                 $legend = Tools::getValue('legend_' . $lang_id);
                 $url = Tools::getValue('url_' . $lang_id);
 
-                // Gestion du nom d'image + ajout -m- si l'image est pour mobile
-                $image_name = '';
-                if (isset($_FILES['image_' . $lang_id]) && !empty($_FILES['image_' . $lang_id]['name'])) {
-                    // Récupérer l'extension de l'image
-                    $extension = pathinfo($_FILES['image_' . $lang_id]['name'], PATHINFO_EXTENSION);
-                    // Construire le nom de fichier selon le format demandé
-                    $image_name = $section->name . '_' . $lang_id;
-                    $image_name .= ((int) Tools::getValue('image_mobile_enabled') === 1) ? '-m-' : '';
-                    $image_name .= '.' . $extension;
 
-                    // Chemin de destination
-                    $destination = _PS_IMG_DIR_ . 's2i_sections/' . $image_name;
-                    move_uploaded_file($_FILES['image_' . $lang_id]['tmp_name'], $destination);
-                }
+                //gestion image 
+                $imagePath = $this->handleImageUpload($lang_id);
+
                 // Insertion dans `ps_s2i_section_details_lang`
                 $sectionDetailsLang = [
                     'id_s2i_detail' => $section_detail_id,
@@ -128,22 +118,43 @@ class AdminS2iImageController extends ModuleAdminController
                     'title' => $title,
                     'legend' => $legend,
                     'url' => $url,
-                    'image' => $image_name,
+                    'image' => $imagePath,
+
                 ];
                 Db::getInstance()->insert('s2i_section_details_lang', $sectionDetailsLang);
             }
         }
-        // var_dump(Tools::getAllValues());
-        // die();
     }
 
-    private function uploadImageForLang($detail_lang, $image_input_name, $filename_prefix)
+    public function handleImageUpload($lang_id)
     {
-        $image = $_FILES[$image_input_name];
-        if ($image['size'] > 0) {
-            $filename = $filename_prefix . '.' . pathinfo($image['name'], PATHINFO_EXTENSION);
-            move_uploaded_file($image['tmp_name'], _PS_IMG_DIR_ . $filename);
-            $detail_lang->image = $filename;
+        // Vérifie si le champ de l'image existe et contient un fichier
+        if (isset($_FILES['image_' . $lang_id]) && !empty($_FILES['image_' . $lang_id]['name'])) {
+            // Récupère l'extension du fichier
+            $extension = pathinfo($_FILES['image_' . $lang_id]['name'], PATHINFO_EXTENSION);
+
+            // Définition du dossier d'upload
+            $uploadDir = _PS_IMG_DIR_ . 's2i_update_img/';
+
+            // Création du dossier si inexistant
+            if (!file_exists($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+
+            // Chemin final de l'image (garde le nom d'origine)
+            $uploadPath = $uploadDir . basename($_FILES['image_' . $lang_id]['name']);
+
+            // Déplace l'image dans le dossier
+            if (move_uploaded_file($_FILES['image_' . $lang_id]['tmp_name'], $uploadPath)) {
+                // Renvoie le chemin de l'image pour l'enregistrer en base de données ou autre
+                return 's2i_update_img/' . basename($_FILES['image_' . $lang_id]['name']);
+            } else {
+                // Affiche une erreur si le déplacement échoue
+                $this->errors[] = $this->trans('Erreur lors du téléchargement de l\'image.');
+                return false;
+            }
         }
+
+        return null;
     }
 }
