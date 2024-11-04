@@ -110,14 +110,14 @@ class Create_section_form
                         'label' => $this->module->l('Légende'),
                         'name' => 'legend',
                         'lang' => true,
-                        'required' => true,
+                        'class' => 'optional-field'
                     ],
                     [
                         'type' => 'text',
                         'label' => $this->module->l('URL'),
                         'name' => 'url',
                         'lang' => true,
-                        'required' => true,
+                        'class' => 'optional-field'
                     ],
                     [
                         'type' => 'switch',
@@ -157,6 +157,7 @@ class Create_section_form
                 'lang' => true,
                 'required' => false,
                 'desc' => $this->module->l('Télécharger une image pour cette section.'),
+                'class' => 'optional-field'
             ];
         }
 

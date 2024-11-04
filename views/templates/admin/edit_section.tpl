@@ -1,1 +1,3 @@
-<h2>Edition de la section</h2>
+<div>
+    {$editForm}
+</div>

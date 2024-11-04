@@ -5,6 +5,7 @@ class SectionDetails extends ObjectModel
     public $id_s2i_section;
     public $active;
     public $only_title;
+    public $position;
 
     public static $definition = [
         'table' => 's2i_section_details',
@@ -13,6 +14,7 @@ class SectionDetails extends ObjectModel
             'id_s2i_section' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => true],
             'active' => ['type' => self::TYPE_BOOL, 'validate' => 'isBool', 'required' => true],
             'only_title' => ['type' => self::TYPE_BOOL, 'validate' => 'isBool', 'required' => false],
+            'position' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => false],
         ],
     ];
 

@@ -32,16 +32,7 @@ class AdminS2iImageController extends ModuleAdminController
         }
     }
 
-    public function renderForm()
-    {
-        $id_s2i_section = (int)Tools::getValue('id_s2i_section');
-        if ($id_s2i_section) {
-            return HelperEditSection::renderEditForm($this->module, $id_s2i_section);
-        } else {
-            // Si aucune section n'est sélectionnée, retournez un message d'erreur ou une redirection
-            Tools::redirectAdmin($this->context->link->getAdminLink('AdminS2iImage', true) . '&conf=4');
-        }
-    }
+
 
 
     public function initContent()
@@ -49,42 +40,47 @@ class AdminS2iImageController extends ModuleAdminController
         parent::initContent();
     }
 
+    public function renderForm()
+    {
+        $id_s2i_section = Tools::getValue('id_s2i_section');
+        $editForm = HelperEditSection::renderEditForm($this->module, $id_s2i_section);
+        $this->context->smarty->assign([
+            'editForm' => $editForm
+        ]);
+
+
+        return $this->context->smarty->fetch($this->module->getLocalPath() . 'views/templates/admin/edit_section.tpl');
+    }
+
+
     public function postProcess()
     {
-
-
-        // $action = Tools::getValue('action');
-        // $id_s2i_section = (int) Tools::getValue('id_s2i_section');
-
-
-        // Gère l'édition
-        if ($this->action === 'edit' && Tools::getValue('id_s2i_section')) {
-            $this->content .= $this->renderForm();
+        if (Tools::isSubmit('submit_update_section')) {
+            $this->handleUpdateSection();
+            return;
         }
 
         if (Tools::isSubmit('delete' . $this->table)) {
             if ($this->processDelete()) {
+                // Stockage du message de confirmation dans la session
+                $this->context->cookie->__set('s2i_success_message', 'La section a été supprimée.');
+                $this->context->cookie->write();
+
                 Tools::redirectAdmin(
-                    $this->context->link->getAdminLink('AdminS2iImage', true) .
-                        '&conf=1'  // Code 1 pour "Suppression réussie"
+                    $this->context->link->getAdminLink('AdminModules', true) .
+                        '&configure=' . $this->module->name .
+                        '&token=' . Tools::getAdminTokenLite('AdminModules')
                 );
             }
-            // Gestion de l'édition
-            elseif (Tools::isSubmit('submit_update_section')) {
-                $this->handleUpdateSection();
-            }
+        } elseif (Tools::isSubmit('submit_create_section')) {
+            $this->handleCreateSection();
+            Tools::redirectAdmin(
+                $this->context->link->getAdminLink('AdminModules', true) .
+                    '&configure=' . $this->module->name .
+                    '&token=' . Tools::getAdminTokenLite('AdminModules')
+            );
         } else {
             parent::postProcess();
-        }
-        if (Tools::isSubmit('submit_create_section')) {
-            $this->handleCreateSection();
-        }
-
-        // Redirige uniquement si aucune erreur n'est présente pour éviter d'interrompre le message d'erreur
-        if (empty($this->errors)) {
-            Tools::redirectAdmin(
-                $this->context->link->getAdminLink('AdminModules', true) . '&configure=' . $this->module->name . '&token=' . Tools::getAdminTokenLite('AdminModules')
-            );
         }
     }
 
@@ -170,7 +166,15 @@ class AdminS2iImageController extends ModuleAdminController
                 Db::getInstance()->insert('s2i_section_details_lang', $sectionDetailsLang);
             }
             if (empty($this->errors)) {
-                $this->confirmations[] = $this->trans('Section updated successfully');
+                // Stockage du message de confirmation dans la session
+                $this->context->cookie->__set('s2i_success_message', 'La section a été créée avec succès !');
+                $this->context->cookie->write();
+
+                Tools::redirectAdmin(
+                    $this->context->link->getAdminLink('AdminModules', true) .
+                        '&configure=' . $this->module->name .
+                        '&token=' . Tools::getAdminTokenLite('AdminModules')
+                );
             }
         }
     }
@@ -191,18 +195,22 @@ class AdminS2iImageController extends ModuleAdminController
             return false;
         }
 
-        // Mise à jour des détails
-        $sectionDetails = SectionDetails::getBySectionId($id_s2i_section);
-        if (!$sectionDetails) {
-            $sectionDetails = new SectionDetails();
-            $sectionDetails->id_s2i_section = $id_s2i_section;
+        // Récupération ou création des détails
+        $detailsData = SectionDetails::getBySectionId($id_s2i_section);
+        if (!$detailsData) {
+            // Si pas de détails, on crée un nouvel enregistrement
+            $details = new SectionDetails();
+            $details->id_s2i_section = $id_s2i_section;
+            $details->add();
+        } else {
+            $details = new SectionDetails($detailsData['id_s2i_detail']);
         }
 
-        $sectionDetails->active = (int)Tools::getValue('active');
-        $sectionDetails->only_title = (int)Tools::getValue('only_title');
-        $sectionDetails->image_is_mobile = (int)Tools::getValue('image_mobile_enabled');
+        // Mise à jour des détails
+        $details->active = (int)Tools::getValue('active');
+        $details->only_title = (int)Tools::getValue('only_title');
 
-        if (!$sectionDetails->save()) {
+        if (!$details->save()) {
             $this->errors[] = $this->trans('Erreur lors de la mise à jour des détails');
             return false;
         }
@@ -210,31 +218,50 @@ class AdminS2iImageController extends ModuleAdminController
         // Mise à jour des données multilingues
         foreach (Language::getLanguages(true) as $lang) {
             $lang_id = (int)$lang['id_lang'];
-            $detailLang = new SectionDetailsLang($sectionDetails->id, $lang_id);
+            $existingData = SectionDetailsLang::getByDetailAndLang($details->id, $lang_id);
 
-            $detailLang->title = Tools::getValue('title_' . $lang_id);
-            $detailLang->legend = Tools::getValue('legend_' . $lang_id);
-            $detailLang->url = Tools::getValue('url_' . $lang_id);
+            $updateData = [
+                'title' => Tools::getValue('title_' . $lang_id),
+                'legend' => Tools::getValue('legend_' . $lang_id),
+                'url' => Tools::getValue('url_' . $lang_id)
+            ];
 
             // Gestion de l'upload d'image
             if (isset($_FILES['image_' . $lang_id]) && !empty($_FILES['image_' . $lang_id]['name'])) {
                 $imagePath = $this->handleImageUpload($section->name, $lang_id);
                 if ($imagePath) {
-                    $detailLang->image = $imagePath;
+                    $updateData['image'] = $imagePath;
                 }
             }
 
-            if (!$detailLang->save()) {
-                $this->errors[] = $this->trans('Erreur lors de la mise à jour pour la langue ') . $lang['name'];
+            if ($existingData) {
+                // Mise à jour des données existantes
+                Db::getInstance()->update(
+                    's2i_section_details_lang',
+                    $updateData,
+                    'id_s2i_detail = ' . (int)$details->id . ' AND id_lang = ' . (int)$lang_id
+                );
+            } else {
+                // Insertion de nouvelles données
+                $updateData['id_s2i_detail'] = (int)$details->id;
+                $updateData['id_lang'] = (int)$lang_id;
+                Db::getInstance()->insert('s2i_section_details_lang', $updateData);
             }
         }
-
         if (empty($this->errors)) {
+            // Stockage du message de confirmation dans la session
+            $this->context->cookie->__set('s2i_success_message', 'Section mise à jour avec succès');
+            $this->context->cookie->write();
+
             Tools::redirectAdmin(
-                $this->context->link->getAdminLink('AdminS2iImage', true) . '&conf=4'
+                $this->context->link->getAdminLink('AdminModules', true) .
+                    '&configure=' . $this->module->name .
+                    '&token=' . Tools::getAdminTokenLite('AdminModules')
             );
         }
     }
+
+
     protected function handleImageUpload($sectionName, $langId)
     {
         if (!isset($_FILES['image_' . $langId]) || empty($_FILES['image_' . $langId]['name'])) {

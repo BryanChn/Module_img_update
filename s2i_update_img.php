@@ -115,21 +115,25 @@ class S2i_Update_Img extends Module
             `id_s2i_detail` INT(11) NOT NULL AUTO_INCREMENT,
             `id_s2i_section` INT(11) NOT NULL,
             `active` TINYINT(1) NOT NULL DEFAULT 1,
-            `only_title` TINYINT(1) NOT NULL DEFAULT 0,
-            `image_is_mobile` INT(11) NOT NULL DEFAULT 0,
+            `position` INT(10) unsigned NOT NULL DEFAULT 0,
+            `only_title` TINYINT(1) NOT NULL DEFAULT 0,         
             PRIMARY KEY (`id_s2i_detail`),
             FOREIGN KEY (`id_s2i_section`) REFERENCES `' . _DB_PREFIX_ . 's2i_sections`(`id_s2i_section`) ON DELETE CASCADE
         ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
         // Table des traductions pour les détails
         $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 's2i_section_details_lang` (
+            `id_s2i_detail_lang` INT(11) NOT NULL AUTO_INCREMENT,
             `id_s2i_detail` INT(11) NOT NULL,
             `id_lang` INT(11) NOT NULL,
             `title` VARCHAR(255) NOT NULL,
+            `image_is_mobile` TINYINT(1) NOT NULL DEFAULT 0,
             `legend` VARCHAR(255) NULL,
             `url` VARCHAR(255) NULL,
             `image` VARCHAR(255) NULL,
-            PRIMARY KEY (`id_s2i_detail`, `id_lang`),
+            `image_mobile` VARCHAR(255) NULL,
+            PRIMARY KEY (`id_s2i_detail_lang`),
+            UNIQUE KEY `id_s2i_detail_lang_unique` (`id_s2i_detail`, `id_lang`),
             FOREIGN KEY (`id_s2i_detail`) REFERENCES `' . _DB_PREFIX_ . 's2i_section_details`(`id_s2i_detail`) ON DELETE CASCADE
         ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
@@ -158,12 +162,16 @@ class S2i_Update_Img extends Module
     public function getContent()
 
     {
-
-
-
         $form = new Create_section_form($this);
         $section_form = $form->renderForm();
         $sectionsList = $this->getSection();
+
+        $success_message = $this->context->cookie->__get('s2i_success_message');
+        if ($success_message) {
+            $this->context->controller->confirmations[] = $this->trans($success_message);
+            $this->context->cookie->__unset('s2i_success_message');
+            $this->context->cookie->write();
+        }
 
         $this->context->smarty->assign([
             'section_form' => $section_form,
