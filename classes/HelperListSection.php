@@ -1,57 +1,63 @@
 <?php
 
-
-
 class HelperListSection
 {
-    public static function getAllSections()
-    {
-        $sql = 'SELECT id_s2i_section, name, active FROM ' . _DB_PREFIX_ . 's2i_sections';
-        return Db::getInstance()->executeS($sql);
-    }
     public static function renderSectionList($module)
-
     {
-
-        // Création de l'instance HelperList
         $helper = new HelperList();
+
+        // Configuration de base
         $helper->module = $module;
         $helper->title = 'Liste des sections';
         $helper->table = 's2i_sections';
         $helper->identifier = 'id_s2i_section';
-        $helper->token = Tools::getAdminTokenLite('AdminModules');
         $helper->shopLinkType = '';
-        $helper->currentIndex = AdminController::$currentIndex . '&configure=' . $module->name . '&action=edit';
-        $helper->actions = ['edit', 'delete'];
         $helper->simple_header = true;
 
-        // Définition des champs pour la liste
-        $fields_list = [
-            'id_s2i_section' => [
+        // Désactiver la recherche
+        $helper->show_toolbar = false;
+        $helper->no_link = false;
+        $helper->show_filters = false; // Désactive les filtres et la recherche
+
+        // Configuration des URLs
+        $helper->currentIndex = Context::getContext()->link->getAdminLink('AdminS2iImage') . '&action=edit';
+
+        $helper->token = Tools::getAdminTokenLite('AdminS2iImage');
+
+
+        // Configuration des actions   
+        $helper->actions = ['edit', 'delete'];
+
+
+        // Définition des champs
+        $fields_list = array(
+            'id_s2i_section' => array(
                 'title' => 'ID',
-                'type' => 'text'
-            ],
-            'name' => [
+                'align' => 'center',
+                'class' => 'fixed-width-xs'
+            ),
+            'name' => array(
                 'title' => 'Nom',
-                'type' => 'text'
-            ],
-            'active' => [
+                'align' => 'left',
+            ),
+            'active' => array(
                 'title' => 'Actif',
-                'type' => 'bool',
+                'align' => 'center',
                 'active' => 'status',
-            ],
-        ];
+                'type' => 'bool',
+                'class' => 'fixed-width-sm'
+            )
+        );
+
+        // Récupération des données
+        $sections = Db::getInstance()->executeS('
+            SELECT id_s2i_section, name, active 
+            FROM ' . _DB_PREFIX_ . 's2i_sections
+            ORDER BY id_s2i_section ASC
+        ');
 
 
-        // Récupération des données de sections
-        $data = self::getAllSections();
 
-        // Vérification de la structure des données
-        if (!is_array($data) || !is_array(reset($data))) {
-            die('Les données récupérées ne sont pas structurées comme prévu.');
-        }
-
-        // Génération de la liste
-        return $helper->generateList($data, $fields_list);
+        return $helper->generateList($sections, $fields_list);
     }
 }

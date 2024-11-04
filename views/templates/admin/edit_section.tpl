@@ -1,2 +1,1 @@
-<h2>Modifier votre section</h2>
-{$editForm}
+<h2>Edition de la section</h2>

@@ -174,12 +174,12 @@ class Create_section_form
         ];
         $helper->module = $this->module;
         $helper->name_controller = 'create_section_form';
-        $helper->token = Tools::getAdminTokenLite('AdminModules');
+        $helper->token = Tools::getAdminTokenLite('AdminS2iImage');
         $helper->languages = $languages;
         $helper->default_form_language = $lang_id;
         $helper->title = $this->module->l('Create New Section');
         $helper->submit_action = 'submit_create_section';
-        $helper->currentIndex = AdminController::$currentIndex . '&configure=' . $this->module->name;
+        $helper->currentIndex = $this->context->link->getAdminLink('AdminS2iImage', true);
 
 
         return $helper->generateForm([$fields_form]);

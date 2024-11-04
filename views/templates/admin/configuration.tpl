@@ -7,7 +7,9 @@
 </div>
 <div>
     {$sectionsList}
+
 </div>
+
 
 <script>
     document.getElementById('show-create-section-form').addEventListener('click', function(event) {

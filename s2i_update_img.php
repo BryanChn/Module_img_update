@@ -33,35 +33,65 @@ class S2i_Update_Img extends Module
 
     public function install()
     {
-        return parent::install()
-            && $this->registerHook('hookActionAdminControllerSetMedia')
-            && $this->registerHook('hookDisplayBackOfficeHeader')
-            && $this->createDatabaseTable()
-            && $this->insertDefaultSection();
-    }
-
-    public function hookActionAdminControllerSetMedia()
-    {
-        $this->context->controller->registerStylesheet(
-            's2i_update_img',
-            $this->_path . 'css/style.css'
-        );
-        $this->context->controller->registerJavascript(
-            'bootstrap_bundle',
-            'https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js'
-        );
-    }
-    public function hookDisplayBackOfficeHeader()
-    {
-        $this->context->controller->registerJavascript(
-            's2i_update_img',
-            $this->_path . 'js/form_hide.js'
-        );
+        // Ajout de l'installation du controller admin
+        if (
+            !parent::install()
+            || !$this->registerHook('hookActionAdminControllerSetMedia')
+            || !$this->registerHook('hookDisplayBackOfficeHeader')
+            || !$this->createDatabaseTable()
+            || !$this->insertDefaultSection()
+            || !$this->installTab()  // Nouvelle ligne
+        ) {
+            return false;
+        }
+        return true;
     }
 
     public function uninstall()
     {
+        // Ajout de la désinstallation du controller admin
+        $this->uninstallTab();  // Nouvelle ligne
         return parent::uninstall();
+    }
+
+    private function installTab()
+    {
+        $tab = new Tab();
+        $tab->active = 1;
+        $tab->class_name = 'AdminS2iImage';
+        $tab->name = array();
+        foreach (Language::getLanguages(true) as $lang) {
+            $tab->name[$lang['id_lang']] = 'S2i Image';
+        }
+
+        // Récupération de l'ID parent via requête directe
+        $parentTabID = (int)Db::getInstance()->getValue(
+            '
+            SELECT id_tab 
+            FROM `' . _DB_PREFIX_ . 'tab` 
+            WHERE class_name = "AdminParentModules"'
+        );
+
+        $tab->id_parent = $parentTabID;
+        $tab->module = $this->name;
+
+        return $tab->add();
+    }
+
+    private function uninstallTab()
+    {
+        $id_tab = (int)Db::getInstance()->getValue(
+            '
+            SELECT id_tab 
+            FROM `' . _DB_PREFIX_ . 'tab` 
+            WHERE class_name = "AdminS2iImage"'
+        );
+
+        if ($id_tab) {
+            $tab = new Tab($id_tab);
+            return $tab->delete();
+        }
+        return true;
     }
 
 
@@ -122,49 +152,26 @@ class S2i_Update_Img extends Module
 
     public function getSection()
     {
-        return HelperListSection::renderSectionList($this);
+        return HelperListSection::renderSectionList($this, context::getContext());
     }
 
-
-
-
-
     public function getContent()
+
     {
 
-        if (Tools::isSubmit('submit_create_section')) {
-            $controller = new AdminS2iImageController();
-            $controller->postProcess();
-        }
-
-        // redirection lorsque l'on clique sur edit dans la liste des sections
-        if (Tools::getValue('action') === 'edit' && Tools::getValue('id_s2i_section')) {
-            $id_s2i_section = (int)Tools::getValue('id_s2i_section');
-            $editForm = HelperEditSection::renderEditForm($this, $id_s2i_section);
-
-            // Assigner le formulaire généré à Smarty
-            $this->context->smarty->assign([
-                'editForm' => $editForm,
-            ]);
-
-            // Charger le template d'édition
-            return $this->context->smarty->fetch($this->local_path . 'views/templates/admin/edit_section.tpl');
-        }
 
 
         $form = new Create_section_form($this);
         $section_form = $form->renderForm();
         $sectionsList = $this->getSection();
 
-
-
-
-
         $this->context->smarty->assign([
             'section_form' => $section_form,
             'sectionsList' => $sectionsList,
-
+            'errors' => $this->context->controller->errors,
+            'confirmations' => $this->context->controller->confirmations,
         ]);
+
 
         return $this->context->smarty->fetch($this->local_path . 'views/templates/admin/configuration.tpl');
     }
