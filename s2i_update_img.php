@@ -5,10 +5,12 @@ if (!defined('_PS_VERSION_')) {
 
 
 require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/Section.php';
+require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/Slide.php';
+require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/SlideLang.php';
 require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/HelperListSection.php';
 require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/Create_section_form.php';
-require_once _PS_MODULE_DIR_ . 's2i_update_img/controllers/admin/AdminS2iImageController.php';
 require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/HelperEditSection.php';
+require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/SlideManager.php';
 require_once dirname(__FILE__) . '/../../config/config.inc.php';
 
 
@@ -102,40 +104,42 @@ class S2i_Update_Img extends Module
 
         // Table principale des sections
         $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 's2i_sections` (
-            `id_s2i_section` INT(11) NOT NULL AUTO_INCREMENT,
+            `id_section` INT(11) NOT NULL AUTO_INCREMENT,
             `name` VARCHAR(255) NOT NULL,
             `active` TINYINT(1) NOT NULL DEFAULT 1,
-            `slider` TINYINT(1) NOT NULL DEFAULT 0,
+            `is_slider` TINYINT(1) NOT NULL DEFAULT 0,
             `speed` INT(11) NOT NULL DEFAULT 5000,
-            PRIMARY KEY (`id_s2i_section`)
+            `position` INT(10) unsigned NOT NULL DEFAULT 0,
+            `hook_location` VARCHAR(255) NULL,
+            PRIMARY KEY (`id_section`)
         ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
         // Table des détails des sections
-        $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 's2i_section_details` (
-            `id_s2i_detail` INT(11) NOT NULL AUTO_INCREMENT,
-            `id_s2i_section` INT(11) NOT NULL,
+        $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 's2i_section_slides` (
+            `id_slide` INT(11) NOT NULL AUTO_INCREMENT,
+            `id_section` INT(11) NOT NULL,
             `active` TINYINT(1) NOT NULL DEFAULT 1,
             `position` INT(10) unsigned NOT NULL DEFAULT 0,
-            `only_title` TINYINT(1) NOT NULL DEFAULT 0,         
-            PRIMARY KEY (`id_s2i_detail`),
-            FOREIGN KEY (`id_s2i_section`) REFERENCES `' . _DB_PREFIX_ . 's2i_sections`(`id_s2i_section`) ON DELETE CASCADE
-        ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
-
-        // Table des traductions pour les détails
-        $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 's2i_section_details_lang` (
-            `id_s2i_detail_lang` INT(11) NOT NULL AUTO_INCREMENT,
-            `id_s2i_detail` INT(11) NOT NULL,
-            `id_lang` INT(11) NOT NULL,
-            `title` VARCHAR(255) NOT NULL,
+            `only_title` TINYINT(1) NOT NULL DEFAULT 0,
+            `title_hide` TINYINT(1) NOT NULL DEFAULT 0,
             `image_is_mobile` TINYINT(1) NOT NULL DEFAULT 0,
-            `legend` VARCHAR(255) NULL,
-            `url` VARCHAR(255) NULL,
-            `image` VARCHAR(255) NULL,
-            `image_mobile` VARCHAR(255) NULL,
-            PRIMARY KEY (`id_s2i_detail_lang`),
-            UNIQUE KEY `id_s2i_detail_lang_unique` (`id_s2i_detail`, `id_lang`),
-            FOREIGN KEY (`id_s2i_detail`) REFERENCES `' . _DB_PREFIX_ . 's2i_section_details`(`id_s2i_detail`) ON DELETE CASCADE
+        PRIMARY KEY (`id_slide`),
+        FOREIGN KEY (`id_section`) REFERENCES `' . _DB_PREFIX_ . 's2i_sections`(`id_section`) ON DELETE CASCADE
         ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
+        // Table des traductions pour les détails
+        $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 's2i_slides_lang` (
+          `id_slide_lang` INT(11) NOT NULL AUTO_INCREMENT,
+          `id_slide` INT(11) NOT NULL,
+          `id_lang` INT(11) NOT NULL,
+          `title` VARCHAR(255) NOT NULL,
+          `legend` VARCHAR(255) NULL,
+          `url` VARCHAR(255) NULL,
+          `image` VARCHAR(255) NULL,
+          `image_mobile` VARCHAR(255) NULL,
+    PRIMARY KEY (`id_slide_lang`),
+    UNIQUE KEY `slide_lang_unique` (`id_slide`, `id_lang`),
+    FOREIGN KEY (`id_slide`) REFERENCES `' . _DB_PREFIX_ . 's2i_section_slides`(`id_slide`) ON DELETE CASCADE
+) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
 
         foreach ($sql as $query) {
@@ -148,17 +152,16 @@ class S2i_Update_Img extends Module
     }
     protected function insertDefaultSection()
     {
-        $sql = 'INSERT INTO `' . _DB_PREFIX_ . 's2i_sections` (`name`, `active`, `slider`, `speed`)
-            VALUES ("Accueil", 1, 0, 5000)';
+        $sql = 'INSERT INTO `' . _DB_PREFIX_ . 's2i_sections` (`name`, `active`, `is_slider`, `speed`, `position`, `hook_location`)
+            VALUES ("Accueil", 1, 0, 5000, 0, "displayHome")';
 
         return Db::getInstance()->execute($sql);
     }
 
     public function getSection()
     {
-        return HelperListSection::renderSectionList($this, context::getContext());
+        return HelperListSection::renderSectionList($this);
     }
-
     public function getContent()
 
     {
