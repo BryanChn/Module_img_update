@@ -39,6 +39,7 @@ class SlideManager
     }
 
     public function renderSlidesList()
+
     {
         $slides = $this->getSlidesWithLang();
         return SlidesLists::renderSlidesList($slides);
@@ -47,6 +48,7 @@ class SlideManager
     public function getSlideById($id_slide)
     {
         $slide = new Slide($id_slide);
+
         if (!Validate::isLoadedObject($slide) || $slide->id_section != $this->id_section) {
             return false;
         }

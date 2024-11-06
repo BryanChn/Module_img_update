@@ -21,70 +21,89 @@ class AdminS2iImageController extends ModuleAdminController
     {
         parent::init();
     }
+
+    // fonction pour afficher les pages 
     public function initContent()
     {
-        if (Tools::isSubmit('edit' . $this->table)) {
-            $this->display = 'edit';
-        }
-
-        if ($this->display === 'edit') {
-            $this->content = $this->EditPage();
-        }
-
         parent::initContent();
 
+        // Déterminer quelle vue afficher en fonction des paramètres
+        if (Tools::isSubmit('edits2i_section_slides') || Tools::getValue('id_slide')) {
+            // Ajout de la vérification de id_slide
+            $this->content .= $this->renderSlideEditForm();
+        } elseif (Tools::getValue('id_section')) {
+            $this->content .= $this->renderSectionPanel();
+        } else {
+            $this->content .= $this->renderConfiguration();
+        }
+
         $this->context->smarty->assign([
-            'content' => $this->content,
+            'content' => $this->content
         ]);
     }
 
-    public function initProcess()
+    protected function renderSlideEditForm()
     {
-        parent::initProcess();
-        if (Tools::isSubmit('delete' . $this->table)) {
-            $this->action = 'delete';
-        }
-        if (Tools::isSubmit('updateS2i_sections') || Tools::isSubmit('edit' . $this->table)) {
-            $this->display = 'edit';
-            $this->action = 'edit';
-        }
+        $id_slide = (int)Tools::getValue('id_slide');
+        $id_section = (int)Tools::getValue('id_section');
+
+        $editForm = HelperEditSection::renderEditSlideForm($this->module, $id_slide);
+
+        $this->context->smarty->assign([
+            'editForm' => $editForm,
+            'id_section' => $id_section,
+            'id_slide' => $id_slide
+        ]);
+
+        return $this->module->display($this->module->getLocalPath(), 'views/templates/admin/edit_slide.tpl');
     }
 
-    public function EditPage()
+
+    // fonction pour afficher la liste des slides
+    protected function renderSectionPanel()
     {
         $id_section = (int)Tools::getValue('id_section');
-        if (!$id_section) {
-            $id_section = (int)Tools::getValue($this->identifier);
-        }
 
-        // Vérification que la section existe
+        // Vérification de la section
         $section = new Section($id_section);
         if (!Validate::isLoadedObject($section)) {
             $this->errors[] = $this->trans('Section introuvable');
             return false;
         }
 
-        // Initialisation du SlideManager
-        $slideManager = new SlideManager($this->module, $id_section);
-
-        // Récupération du formulaire d'édition des paramètres
+        // Préparation des données
         $editForm = HelperEditSection::renderEditForm($this->module, $id_section);
-
-        // Récupération de la liste des diapositives
+        $slideManager = new SlideManager($this->module, $id_section);
         $slidesList = $slideManager->renderSlidesList();
 
-        // Assignation des variables au template
+        // Ajout de id_section dans l'assignation
         $this->context->smarty->assign([
             'editForm' => $editForm,
-            'section' => $section,
             'slidesList' => $slidesList,
-            'add_slide_link' => $this->context->link->getAdminLink('AdminS2iImage') . '&addslide&id_section=' . $id_section
+            'id_section' => $id_section  // Ajout de cette ligne
         ]);
 
-        return $this->context->smarty->fetch($this->module->getLocalPath() . 'views/templates/admin/panel_section_slide.tpl');
+        return $this->module->display($this->module->getLocalPath(), 'views/templates/admin/panel_section_slide.tpl');
     }
 
 
+    protected function renderConfiguration()
+    {
+
+        return $this->module->display($this->module->getLocalPath(), 'views/templates/admin/configuration.tpl');
+    }
+
+    // fonction pour gérer les mises à jour
+    public function processUpdate()
+    {
+        // Gérer les mises à jour ici
+        if (Tools::isSubmit('submit_update_slide')) {
+            // Logique de mise à jour du slide
+        } elseif (Tools::isSubmit('submit_update_section')) {
+            // Logique de mise à jour de la section
+        }
+    }
+    // fonction pour gérer les soumissions
     public function postProcess()
     {
         if (Tools::isSubmit('submit_update_section')) {

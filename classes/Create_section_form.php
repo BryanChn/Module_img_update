@@ -229,7 +229,7 @@ class Create_section_form
         $helper->tpl_vars = array(
             'template' => 'form.tpl'
         );
-        $helper->base_folder = _PS_MODULE_DIR_ . 's2i_update_img/views/templates/admin/';
+        $helper->base_folder = _PS_MODULE_DIR_ . 's2i_update_img/views/templates/admin/extendFormSection/';
         return $helper->generateForm([$fields_form]);
     }
 }

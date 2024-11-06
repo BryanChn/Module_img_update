@@ -3,7 +3,7 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
-
+require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/SlidesLists.php';
 require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/Section.php';
 require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/Slide.php';
 require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/SlideLang.php';
@@ -150,6 +150,8 @@ class S2i_Update_Img extends Module
 
         return true;
     }
+
+
     protected function insertDefaultSection()
     {
         $sql = 'INSERT INTO `' . _DB_PREFIX_ . 's2i_sections` (`name`, `active`, `is_slider`, `speed`, `position`, `hook_location`)

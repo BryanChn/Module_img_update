@@ -12,7 +12,7 @@ class HelperListSection
         $helper->title = 'Liste des sections';
         $helper->table = 's2i_sections';
         $helper->identifier = 'id_section';
-        $helper->shopLinkType = '';
+        $helper->shopLinkType = ''; // ou 'shop
         $helper->simple_header = true;
         // Modification du currentIndex pour pointer vers AdminS2iImage
         $helper->currentIndex = $context->link->getAdminLink('AdminS2iImage');
