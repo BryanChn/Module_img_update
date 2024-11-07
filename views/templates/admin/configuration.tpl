@@ -2,13 +2,14 @@
 <a href="#" id="show-create-section-form" class="btn btn-primary mb-3">+</a>
 
 
+
 <div id="create-section-form" style="display: none; margin-top: 20px;">
     {$section_form}
 </div>
 <div>
     {$sectionsList}
-
 </div>
+
 
 
 <script>

@@ -6,7 +6,7 @@
             {foreach from=$languages item=language}
                 <div class="translatable-field lang-{$language.id_lang}"
                     {if $language.id_lang != $defaultFormLanguage}style="display:none" {/if}>
-                    <div class="col-lg-9">
+                    <div class="col-lg-5">
                         {if isset($fields[0]['form'][$input.group_name])}
                             <img src="{$image_baseurl}{$fields[0]['form'][$input.group_name][$language.id_lang]}" class="img-thumbnail"
                                 width="50px" />
@@ -26,7 +26,7 @@
                         </div>
                     </div>
                     {if $languages|count > 1}
-                        <div class="col-lg-3">
+                        <div class="col-lg-2">
                             <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
                                 {$language.iso_code}
                                 <span class="caret"></span>

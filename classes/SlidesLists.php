@@ -16,7 +16,9 @@ class SlidesLists
         $helper->shopLinkType = '';
 
         // Ajout de l'id_section dans l'URL
-        $helper->currentIndex = $context->link->getAdminLink('AdminS2iImage', true) . '&id_section=' . $id_section;
+        // $helper->currentIndex = $context->link->getAdminLink('AdminS2iImage', true) . '&id_section=' . $id_section;
+        // $helper->token = Tools::getAdminTokenLite('AdminS2iImage');
+        $helper->currentIndex = $context->link->getAdminLink('AdminS2iImage', true);
         $helper->token = Tools::getAdminTokenLite('AdminS2iImage');
 
         // Ajout des paramètres dans tpl_vars
@@ -56,28 +58,23 @@ class SlidesLists
 
     public static function displayImageThumbnail($image, $row)
     {
-        PrestaShopLogger::addLog('Row data: ' . print_r($row, true));
-
         if (empty($row['id_slide'])) {
             return '--';
         }
 
-        // Récupérer l'image depuis s2i_slides_lang
         $id_lang = Context::getContext()->language->id;
         $sql = 'SELECT sl.image 
-                FROM ' . _DB_PREFIX_ . 's2i_slides_lang sl
-                WHERE sl.id_slide = ' . (int)$row['id_slide'] . ' 
-                AND sl.id_lang = ' . (int)$id_lang;
+            FROM ' . _DB_PREFIX_ . 's2i_slides_lang sl
+            WHERE sl.id_slide = ' . (int)$row['id_slide'] . ' 
+            AND sl.id_lang = ' . (int)$id_lang;
 
         $image = Db::getInstance()->getValue($sql);
-
 
         if (empty($image)) {
             return '--';
         }
 
         $imageUrl = _PS_IMG_ . $image;
-
 
         return '<img src="' . $imageUrl . '" alt="" class="img-thumbnail" style="max-width: 200px">';
     }
