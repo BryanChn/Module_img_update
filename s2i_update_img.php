@@ -26,6 +26,7 @@ class S2i_Update_Img extends Module
         $this->need_instance = 0;
         $this->bootstrap = true;
 
+
         parent::__construct();
 
         $this->displayName = $this->trans('S2I Update Image', [], 'Modules.S2iUpdateImg.Admin');
@@ -55,6 +56,7 @@ class S2i_Update_Img extends Module
         $this->uninstallTab();  // Nouvelle ligne
         return parent::uninstall();
     }
+
 
     private function installTab()
     {
@@ -102,6 +104,10 @@ class S2i_Update_Img extends Module
     {
         $sql = [];
 
+
+        // position section est la position de la section dans le hook
+        // position slide est la position du slide dans la section
+
         // Table principale des sections
         $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 's2i_sections` (
             `id_section` INT(11) NOT NULL AUTO_INCREMENT,
@@ -109,7 +115,7 @@ class S2i_Update_Img extends Module
             `active` TINYINT(1) NOT NULL DEFAULT 1,
             `is_slider` TINYINT(1) NOT NULL DEFAULT 0,
             `speed` INT(11) NOT NULL DEFAULT 5000,
-            `position` INT(10) unsigned NOT NULL DEFAULT 0,
+            `position` INT(10) unsigned NOT NULL DEFAULT 0, 
             `hook_location` VARCHAR(255) NULL,
             PRIMARY KEY (`id_section`)
         ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
@@ -119,7 +125,7 @@ class S2i_Update_Img extends Module
             `id_slide` INT(11) NOT NULL AUTO_INCREMENT,
             `id_section` INT(11) NOT NULL,
             `active` TINYINT(1) NOT NULL DEFAULT 1,
-            `position` INT(10) unsigned NOT NULL DEFAULT 0,
+            `position` INT(10) unsigned NOT NULL DEFAULT 0,  
             `only_title` TINYINT(1) NOT NULL DEFAULT 0,
             `title_hide` TINYINT(1) NOT NULL DEFAULT 0,
             `image_is_mobile` TINYINT(1) NOT NULL DEFAULT 0,
@@ -164,9 +170,12 @@ class S2i_Update_Img extends Module
     {
         return HelperListSection::renderSectionList($this);
     }
+
+
     public function getContent()
 
     {
+
         $form = new Create_section_form($this);
         $section_form = $form->renderForm();
         $sectionsList = $this->getSection();

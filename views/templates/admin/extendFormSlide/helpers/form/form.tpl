@@ -10,14 +10,22 @@
                 {assign var=lang_id value=$language.id_lang}
                 <div class="translatable-field lang-{$lang_id}" {if $lang_id != $defaultFormLanguage}style="display:none" {/if}>
                     <div class="col-lg-6">
-                        {* Affichage de l'image existante pour file_lang *}
                         {if $input.name == 'image'}
-                            <img src="{$fields_value["image{$lang_id}" ]}" class="img-thumbnail" width="250px" />
+                            {if isset($fields_value["image{$lang_id}"]) && $fields_value["image{$lang_id}"] != ''}
+                                <img src="{$fields_value["image{$lang_id}" ]}" class="img-thumbnail" width="250px" />
+                            {else}
+                                <p class="text-muted">{l s='Aucune image' d='Admin.Global'}</p>
+                            {/if}
                         {/if}
 
                         {if $input.name == 'image_mobile'}
-                            <img src="{$fields_value["image_mobile{$lang_id}" ]}" class="img-thumbnail" width="250px" />
+                            {if isset($fields_value["image_mobile{$lang_id}"]) && $fields_value["image_mobile{$lang_id}"] != ''}
+                                <img src="{$fields_value["image_mobile{$lang_id}" ]}" class="img-thumbnail" width="250px" />
+                            {else}
+                                <p class="text-muted">{l s='Aucune image mobile' d='Admin.Global'}</p>
+                            {/if}
                         {/if}
+
 
                         {* Champs texte pour text *}
                         {if $input.type == 'text'}

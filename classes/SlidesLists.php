@@ -14,19 +14,27 @@ class SlidesLists
         $helper->table = 's2i_section_slides';
         $helper->actions = ['edit', 'delete'];
         $helper->shopLinkType = '';
+        $helper->position_identifier = 'id_slide';
+        $helper->orderBy = 'position';
+        $helper->orderWay = 'ASC';
 
-        // Ajout de l'id_section dans l'URL
-        // $helper->currentIndex = $context->link->getAdminLink('AdminS2iImage', true) . '&id_section=' . $id_section;
-        // $helper->token = Tools::getAdminTokenLite('AdminS2iImage');
+        $helper->bootstrap = true;
+
         $helper->currentIndex = $context->link->getAdminLink('AdminS2iImage', true);
         $helper->token = Tools::getAdminTokenLite('AdminS2iImage');
 
-        // Ajout des paramètres dans tpl_vars
         $helper->tpl_vars = [
             'id_section' => $id_section
         ];
 
         $fields_list = [
+            'position' => [
+                'title' => 'Position',
+                'position' => true,
+                'align' => 'center',
+                'class' => 'fixed-width-sm',
+                'orderby' => true
+            ],
             'id_slide' => [
                 'title' => 'ID',
                 'align' => 'center',
@@ -36,7 +44,6 @@ class SlidesLists
                 'title' => 'Titre',
                 'align' => 'left'
             ],
-
             'active' => [
                 'title' => 'Actif',
                 'align' => 'center',
@@ -52,7 +59,9 @@ class SlidesLists
                 'class' => 'fixed-width-lg'
             ]
         ];
-
+        usort($slides, function ($a, $b) {
+            return $a['position'] - $b['position'];
+        });
         return $helper->generateList($slides, $fields_list);
     }
 

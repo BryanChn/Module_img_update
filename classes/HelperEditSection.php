@@ -12,7 +12,7 @@ class HelperEditSection
         $helper->module = $module;
         $helper->name_controller = 'AdminS2iImage';
         $helper->identifier = 'id_section';
-        $helper->submit_action = 'submit_update_section';
+        $helper->submit_action = 'submit_update_section_only';
         $helper->currentIndex = Context::getContext()->link->getAdminLink('AdminS2iImage');
         $helper->token = Tools::getAdminTokenLite('AdminS2iImage');
 
