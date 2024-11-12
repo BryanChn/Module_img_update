@@ -1,8 +1,7 @@
 {extends file="helpers/form/form.tpl"}
 {block name="input"}
 
-    {if $input.type == 'file_lang'}
-
+    {if $input.type == 'file_lang' || $input.type == 'text'}
 
         <div class="row{if isset($input.mobile) && $input.mobile} mobile-image{/if}"
             style="{if isset($input.mobile) && $input.mobile}display:none;{/if}">
@@ -10,17 +9,22 @@
             {foreach from=$languages item=language}
                 {assign var=lang_id value=$language.id_lang}
                 <div class="translatable-field lang-{$lang_id}" {if $lang_id != $defaultFormLanguage}style="display:none" {/if}>
-                    <div class="col-lg-9">
-                        {* Affichage de l'image existante *}
+                    <div class="col-lg-6">
+                        {* Affichage de l'image existante pour file_lang *}
+                        {if $input.name == 'image'}
+                            <img src="{$fields_value["image{$lang_id}" ]}" class="img-thumbnail" width="250px" />
+                        {/if}
 
-                        <img src="{$fields_value["image{$lang_id}" ]}" class="img-thumbnail" width="50px" />
+                        {if $input.name == 'image_mobile'}
+                            <img src="{$fields_value["image_mobile{$lang_id}" ]}" class="img-thumbnail" width="250px" />
+                        {/if}
 
-                        {* Champs texte *}
-                        {if $input.name == 'title' || {$input.name} == 'legend' || $input.name == 'url'}
+                        {* Champs texte pour text *}
+                        {if $input.type == 'text'}
                             <input type="text" name="{$input.name}_{$lang_id}" value="{$fields_value["{$input.name}_{$lang_id}"
                 ]|escape:'html':'UTF-8'}" class="form-control" />
                         {else}
-                            {* Upload d'image *}
+                            {* Upload d'image pour file_lang *}
                             <div class="dummyfile input-group">
                                 <input id="{$input.name}_{$lang_id}" type="file" name="{$input.name}_{$lang_id}"
                                     class="hide-file-upload" />
@@ -61,27 +65,34 @@
 {/block}
 
 {block name="after"}
+
+    {* Toggle des champs en fonction de la valeur de only_title *}
     <script type="text/javascript">
         $(document).ready(function() {
             function toggleOnlyTitleFields() {
                 var onlyTitle = $('input[name="only_title"]:checked').val() == 1;
                 if (onlyTitle) {
                     $('.legend-url-group').closest('.form-group').hide();
-                    $('.file_lang').closest('.form-group').hide();
                     $('input[name="image_is_mobile"]').closest('.form-group').hide();
                     $('.mobile-image').hide().closest('.form-group').hide();
-                    $('.img-current').hide().closest('.form-group').hide();
+                    $('.image').hide().closest('.form-group').hide();
+
+
+
+
                 } else {
                     $('.legend-url-group').closest('.form-group').show();
-                    $('.file_lang').closest('.form-group').show();
                     $('input[name="image_is_mobile"]').closest('.form-group').show();
                     $('.mobile-image').show().closest('.form-group').show();
-                    $('.img-current').show().closest('.form-group').show();
+                    $('.image').show().closest('.form-group').show();
+
+
                 }
             }
 
             function toggleMobileImageUpload() {
-                var isMobile = $('input[name="image_is_mobile"]:checked').val() == 1;
+                var isMobile = $('input[name="image_is_mobile"]:checked').val() == 1 && $(
+                    'input[name="only_title"]:checked').val() == 0;
                 if (isMobile) {
                     $('.mobile-image').show();
                 } else {
@@ -96,6 +107,15 @@
             // Événements
             $('input[name="only_title"]').change(toggleOnlyTitleFields);
             $('input[name="image_is_mobile"]').change(toggleMobileImageUpload);
+            $('input[name="only_title"]').change(toggleOnlyTitleFields);
+        });
+
+        {* event pour le select button *}
+        $(document).ready(function() {
+            $('button[id$="-selectbutton"]').on('click', function() {
+                var inputId = $(this).attr('id').replace('-selectbutton', '');
+                $('#' + inputId).click();
+            });
         });
     </script>
 {/block}

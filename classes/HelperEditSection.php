@@ -6,6 +6,7 @@ class HelperEditSection
     {
         $section = new Section($id_section);
 
+
         $helper = new HelperForm();
         $helper->show_toolbar = false;
         $helper->module = $module;
@@ -14,10 +15,7 @@ class HelperEditSection
         $helper->submit_action = 'submit_update_section';
         $helper->currentIndex = Context::getContext()->link->getAdminLink('AdminS2iImage');
         $helper->token = Tools::getAdminTokenLite('AdminS2iImage');
-        $helper->base_folder = _PS_MODULE_DIR_ . 's2i_update_img/views/templates/admin/extendFormSection/';
-        $helper->tpl_vars = array(
-            'template' => 'form.tpl'
-        );
+
 
         $helper->fields_value = [
             'id_section' => $id_section,
@@ -93,6 +91,7 @@ class HelperEditSection
 
 
 
+
         $helper = new HelperForm();
         $helper->show_toolbar = false;
         $helper->module = $module;
@@ -116,7 +115,7 @@ class HelperEditSection
         // Initialisation des valeurs
         $helper->fields_value = [
             'id_slide' => $id_slide,
-            'id_section' => $slide->id_section,
+            'id_section' => $id_section,
             'active' => $slide->active,
             'only_title' => $slide->only_title,
             'title_hide' => $slide->title_hide,
@@ -131,6 +130,7 @@ class HelperEditSection
                 $helper->fields_value['title_' . $id_lang] = $currentLang['title'];
                 $helper->fields_value['legend_' . $id_lang] = $currentLang['legend'];
                 $helper->fields_value['url_' . $id_lang] = $currentLang['url'];
+
 
                 $sql = 'SELECT sl.image 
                         FROM ' . _DB_PREFIX_ . 's2i_slides_lang sl
@@ -238,38 +238,20 @@ class HelperEditSection
                         'group_name' => 'image_is_mobile'
                     ],
                     [
-                        'type' => 'html',
-                        'name' => 'image',
-                        'label' => $module->l('Image actuelle'),
-                        'html_content' => true,
-                        'lang' => true,
-                        'form_group_class' => 'image',
-                        'display_image' => true,
-                        'group_name' => 'image'
-                    ],
-
-                    [
                         'type' => 'file_lang',
-                        'label' => $module->l('Nouvelle image'),
+                        'label' => $module->l('Voulez-vous remplacer l\'image actuelle ?'),
                         'name' => 'image',
                         'lang' => true,
                         'required' => false,
+                        'display_image' => true,
                         'group_name' => 'image',
+                        'form_group_class' => 'image',
 
                     ],
-                    [
-                        'type' => 'html',
-                        'name' => 'image_mobile',
-                        'label' => $module->l('Image mobile actuelle'),
-                        'html_content' => true,
-                        'lang' => true,
-                        'form_group_class' => 'mobile-image',
-                        'display_image' => true,
-                        'group_name' => 'image_mobile'
-                    ],
+
                     [
                         'type' => 'file_lang',
-                        'label' => $module->l('Nouvelle image mobile'),
+                        'label' => $module->l('Voulez-vous remplacer l\'image mobile actuelle ?'),
                         'name' => 'image_mobile',
                         'lang' => true,
                         'required' => false,

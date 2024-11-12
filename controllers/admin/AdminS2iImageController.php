@@ -82,10 +82,12 @@ class AdminS2iImageController extends ModuleAdminController
     protected function renderSlideEditForm()
     {
         $id_slide = (int)Tools::getValue('id_slide');
-        $id_section = (int)Tools::getValue('id_section');
+
+
 
         // Récupérer les données du slide
         $slide = new Slide($id_slide);
+        $id_section = $slide->id_section;
         $slideLangs = [];
 
         // Récupérer les traductions pour chaque langue
@@ -435,6 +437,13 @@ class AdminS2iImageController extends ModuleAdminController
                 $imagePath = $this->handleImageUpload($section->name, $id_lang);
                 if ($imagePath) {
                     $slideLang->image = $imagePath;
+                }
+            }
+
+            if (isset($_FILES['image_mobile_' . $id_lang]) && !empty($_FILES['image_mobile_' . $id_lang]['name'])) {
+                $imageMobilePath = $this->handleImageUpload($section->name, $id_lang, true);
+                if ($imageMobilePath) {
+                    $slideLang->image_mobile = $imageMobilePath;
                 }
             }
 

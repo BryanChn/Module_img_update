@@ -226,10 +226,7 @@ class Create_section_form
         $helper->title = $this->module->l('Create New Section');
         $helper->submit_action = 'submit_create_section';
         $helper->currentIndex = $this->context->link->getAdminLink('AdminS2iImage', true);
-        $helper->tpl_vars = array(
-            'template' => 'form.tpl'
-        );
-        $helper->base_folder = _PS_MODULE_DIR_ . 's2i_update_img/views/templates/admin/extendFormSection/';
+        $helper->base_folder = _PS_MODULE_DIR_ . 's2i_update_img/views/templates/admin/extendFormSection/helpers/form/';
         return $helper->generateForm([$fields_form]);
     }
 }
