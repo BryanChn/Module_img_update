@@ -24,12 +24,12 @@ class Slide extends ObjectModel
     public static function getBySection($id_section)
     {
         $sql = 'SELECT ss.*, sl.title, sl.image 
-                FROM ' . _DB_PREFIX_ . 's2i_section_slides ss
-                LEFT JOIN ' . _DB_PREFIX_ . 's2i_slides_lang sl 
-                ON ss.id_slide = sl.id_slide 
-                AND sl.id_lang = ' . (int)Context::getContext()->language->id . '
-                WHERE ss.id_section = ' . (int)$id_section . '
-                ORDER BY ss.position ASC';
+            FROM ' . _DB_PREFIX_ . 's2i_section_slides ss
+            LEFT JOIN ' . _DB_PREFIX_ . 's2i_slides_lang sl 
+            ON ss.id_slide = sl.id_slide 
+            AND sl.id_lang = ' . (int)Context::getContext()->language->id . '
+            WHERE ss.id_section = ' . (int)$id_section . '
+            ORDER BY ss.position ASC';
         return Db::getInstance()->executeS($sql);
     }
 }

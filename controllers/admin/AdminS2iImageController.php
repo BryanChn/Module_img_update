@@ -9,6 +9,7 @@ require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/HelperListSection.php';
 require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/Form_add_slide.php';
 class AdminS2iImageController extends ModuleAdminController
 {
+    protected $position_identifier = 'id_slide';
     public function __construct()
     {
         parent::__construct();
@@ -23,6 +24,8 @@ class AdminS2iImageController extends ModuleAdminController
     {
         parent::init();
     }
+
+
     public function postProcess()
     {
         if (Tools::isSubmit('submit_create_section')) {
@@ -32,7 +35,11 @@ class AdminS2iImageController extends ModuleAdminController
             }
             return;
         }
-
+        if (Tools::isSubmit('updateSlidesPosition')) {
+            PrestaShopLogger::addLog('UpdateSlidesPosition called');
+            $this->ajaxProcessUpdatePositions();
+            return;
+        }
         if (Tools::isSubmit('submit_update_section_only')) {
             $this->handleUpdateSectionOnly();
 
@@ -57,8 +64,26 @@ class AdminS2iImageController extends ModuleAdminController
 
         parent::postProcess();
     }
+    public function setMedia($isNewTheme = false)
+    {
+        parent::setMedia($isNewTheme);
 
 
+
+        // Chargement explicite de jQuery UI
+        $this->addJqueryUI([
+            'ui.sortable',
+            'ui.draggable'
+        ]);
+
+        // Ajout des messages de configuration
+        Media::addJsDef([
+            's2iUpdateImgConfig' => [
+                'successMessage' => $this->trans('Positions mises à jour avec succès'),
+                'errorMessage' => $this->trans('Erreur lors de la mise à jour des positions')
+            ]
+        ]);
+    }
     // fonction pour afficher les pages 
     public function initContent()
     {
@@ -80,25 +105,44 @@ class AdminS2iImageController extends ModuleAdminController
         ]);
     }
 
-    public function ajaxProcessUpdateSlidesPosition()
+    public function ajaxProcessUpdatePositions()
     {
-        $order = Tools::getValue('order');
-        if ($order && is_array($order)) {
-            foreach ($order as $position => $id_slide) {
+        PrestaShopLogger::addLog('Début de ajaxProcessUpdatePositions');
+
+        $positions = Tools::getValue('positions');
+        PrestaShopLogger::addLog('Positions reçues: ' . print_r($positions, true));
+
+        if (!$positions || !($positions = json_decode($positions, true))) {
+            PrestaShopLogger::addLog('Positions invalides');
+            die(json_encode(['success' => false]));
+        }
+
+        try {
+            foreach ($positions as $position) {
+                $id_slide = (int)$position['id_slide'];
+                $newPosition = (int)$position['position'];
+
+                PrestaShopLogger::addLog("Mise à jour slide $id_slide position $newPosition");
+
                 $result = Db::getInstance()->update(
                     's2i_section_slides',
-                    ['position' => (int)$position],
-                    'id_slide = ' . (int)$id_slide
+                    ['position' => $newPosition],
+                    'id_slide = ' . $id_slide
                 );
+
                 if (!$result) {
-                    die(json_encode(['error' => true]));
+                    PrestaShopLogger::addLog("Échec mise à jour position pour slide $id_slide");
+                    die(json_encode(['success' => false]));
                 }
             }
-            die(json_encode(['success' => true]));
-        }
-        die(json_encode(['error' => true]));
-    }
 
+            PrestaShopLogger::addLog('Toutes les positions mises à jour avec succès');
+            die(json_encode(['success' => true]));
+        } catch (Exception $e) {
+            PrestaShopLogger::addLog('Erreur: ' . $e->getMessage());
+            die(json_encode(['success' => false]));
+        }
+    }
     protected function renderSlideEditForm()
     {
         $id_slide = (int)Tools::getValue('id_slide');
@@ -131,6 +175,7 @@ class AdminS2iImageController extends ModuleAdminController
 
         return $this->module->display($this->module->getLocalPath(), 'views/templates/admin/edit_slide.tpl');
     }
+
 
 
     protected function renderSectionPanel()

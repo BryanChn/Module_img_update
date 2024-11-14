@@ -28,36 +28,3 @@
         </div>
     </div>
 </div>
-
-<script type="text/javascript">
-    $(document).ready(function() {
-        var $slidesList = $("#slides-list tbody");
-
-        if ($slidesList.length) {
-            $slidesList.sortable({
-                opacity: 0.6,
-                cursor: "move",
-                axis: 'y',
-                update: function(event, ui) {
-                    var order = [];
-                    $slidesList.find('tr').each(function(index) {
-                        order.push($(this).data('id'));
-                    });
-
-                    $.ajax({
-                        type: 'POST',
-                        url: '{$link->getAdminLink('AdminS2iImage')}&ajax=1&action=updateSlidesPosition',
-                        data: { order: order },
-                        success: function(response) {
-                            var result = JSON.parse(response);
-                            if (result.error) {
-                                showErrorMessage(
-                                    'Erreur lors de la mise à jour des positions');
-                            }
-                        }
-                    });
-                }
-            });
-        }
-    });
-</script>
