@@ -42,6 +42,7 @@
                                     <button id="{$input.name}_{$lang_id}-selectbutton" type="button" name="submitAddAttachments"
                                         class="btn btn-default">
                                         <i class="icon-folder-open"></i> {l s='Choisir une image' d='Admin.Actions'}
+
                                     </button>
                                 </span>
                             </div>
@@ -77,6 +78,8 @@
     {* Toggle des champs en fonction de la valeur de only_title *}
     <script type="text/javascript">
         $(document).ready(function() {
+            console.log('test');
+
             function toggleOnlyTitleFields() {
                 var onlyTitle = $('input[name="only_title"]:checked').val() == 1;
                 if (onlyTitle) {

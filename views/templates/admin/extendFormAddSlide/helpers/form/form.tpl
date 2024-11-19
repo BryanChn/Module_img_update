@@ -51,52 +51,54 @@
 {block name="after"}
     <script type="text/javascript">
         $(document).ready(function() {
-            // Gestion de l'affichage des champs en fonction de only_title
-        function toggleOnlyTitleFields() {
-            var onlyTitle = $('input[name="only_title"]:checked').val() == 1;
-            if (onlyTitle) {
-                $('.legend-url-group').closest('.form-group').hide();
-                $('input[name="image_is_mobile"]').closest('.form-group').hide();
-                $('.mobile-image').hide().closest('.form-group').hide();
-                $('.image').hide().closest('.form-group').hide();
-            } else {
-                $('.legend-url-group').closest('.form-group').show();
-                $('input[name="image_is_mobile"]').closest('.form-group').show();
-                $('.mobile-image').show().closest('.form-group').show();
-                $('.image').show().closest('.form-group').show();
+
+
+            function toggleOnlyTitleFields() {
+                var onlyTitle = $('input[name="only_title"]:checked').val() == 1;
+                if (onlyTitle) {
+
+                    $('input[name="image_is_mobile"]').closest('.form-group').hide();
+                    $('.mobile-image').hide().closest('.form-group').hide();
+                    $('.image').hide().closest('.form-group').hide();
+                } else {
+
+                    $('input[name="image_is_mobile"]').closest('.form-group').show();
+                    $('.mobile-image').show().closest('.form-group').show();
+                    $('.image').show().closest('.form-group').show();
+                }
             }
-        }
 
-        // Gestion de l'affichage de l'upload mobile
-        function toggleMobileImageUpload() {
-            var isMobile = $('input[name="image_is_mobile"]:checked').val() == 1 &&
-                $('input[name="only_title"]:checked').val() == 0;
-            if (isMobile) {
-                $('.mobile-image').show();
-            } else {
-                $('.mobile-image').hide();
+            // Gestion de l'affichage de l'upload mobile
+            function toggleMobileImageUpload() {
+                var isMobile = $('input[name="image_is_mobile"]:checked').val() == 1 &&
+                    $('input[name="only_title"]:checked').val() == 0;
+                if (isMobile) {
+                    $('.mobile-image').show();
+                } else {
+                    $('.mobile-image').hide();
+                }
             }
-        }
 
-        // Initialisation
-        toggleOnlyTitleFields();
-        toggleMobileImageUpload();
+            // Initialisation
+            toggleOnlyTitleFields();
+            toggleMobileImageUpload();
 
-        // Événements
-        $('input[name="only_title"]').change(toggleOnlyTitleFields);
-        $('input[name="image_is_mobile"]').change(toggleMobileImageUpload);
 
-        // Gestion des boutons de sélection de fichier
-        $('button[id$="-selectbutton"]').on('click', function() {
-            var inputId = $(this).attr('id').replace('-selectbutton', '');
-            $('#' + inputId).click();
-        });
+            // Événements
+            $('input[name="only_title"]').change(toggleOnlyTitleFields);
+            $('input[name="image_is_mobile"]').change(toggleMobileImageUpload);
 
-        // Mise à jour du nom du fichier sélectionné
-        $('input[type="file"].hide-file-upload').change(function() {
-            var id = $(this).attr('id');
-            var fileName = $(this).val().split('\\').pop();
-            $('#' + id + '-name').val(fileName);
+            // Gestion des boutons de sélection de fichier
+            $('button[id$="-selectbutton"]').on('click', function() {
+                var inputId = $(this).attr('id').replace('-selectbutton', '');
+                $('#' + inputId).click();
+            });
+
+            // Mise à jour du nom du fichier sélectionné
+            $('input[type="file"].hide-file-upload').change(function() {
+                var id = $(this).attr('id');
+                var fileName = $(this).val().split('\\').pop();
+                $('#' + id + '-name').val(fileName);
             });
         });
     </script>

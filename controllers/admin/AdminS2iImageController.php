@@ -9,7 +9,7 @@ require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/HelperListSection.php';
 require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/Form_add_slide.php';
 class AdminS2iImageController extends ModuleAdminController
 {
-    protected $position_identifier = 'id_slide';
+    protected $positions_identifier = 'id_slide';
     public function __construct()
     {
         parent::__construct();
@@ -35,11 +35,11 @@ class AdminS2iImageController extends ModuleAdminController
             }
             return;
         }
-        if (Tools::isSubmit('updateSlidesPosition')) {
-            PrestaShopLogger::addLog('UpdateSlidesPosition called');
+        if (Tools::isSubmit('action') && Tools::getValue('action') == 'updatePositions') {
             $this->ajaxProcessUpdatePositions();
-            return;
+            exit;
         }
+
         if (Tools::isSubmit('submit_update_section_only')) {
             $this->handleUpdateSectionOnly();
 
@@ -68,23 +68,22 @@ class AdminS2iImageController extends ModuleAdminController
     {
         parent::setMedia($isNewTheme);
 
+        $this->addJqueryUI('ui.sortable');
+        $this->addCSS(_MODULE_DIR_ . 's2i_update_img/css/style.css');
 
 
-        // Chargement explicite de jQuery UI
-        $this->addJqueryUI([
-            'ui.sortable',
-            'ui.draggable'
-        ]);
-
-        // Ajout des messages de configuration
         Media::addJsDef([
             's2iUpdateImgConfig' => [
                 'successMessage' => $this->trans('Positions mises à jour avec succès'),
-                'errorMessage' => $this->trans('Erreur lors de la mise à jour des positions')
+                'errorMessage' => $this->trans('Erreur lors de la mise à jour des positions'),
+                'updateUrl' => $this->context->link->getAdminLink('AdminS2iImage'),
+                'token' => Tools::getAdminTokenLite('AdminS2iImage'),
+
+
             ]
         ]);
     }
-    // fonction pour afficher les pages 
+
     public function initContent()
     {
         parent::initContent();
@@ -107,42 +106,56 @@ class AdminS2iImageController extends ModuleAdminController
 
     public function ajaxProcessUpdatePositions()
     {
-        PrestaShopLogger::addLog('Début de ajaxProcessUpdatePositions');
+        if (!Tools::getIsset('token') || Tools::getValue('token') !== Tools::getAdminTokenLite('AdminS2iImage')) {
+            die(json_encode([
+                'success' => false,
+                'message' => $this->trans('Token invalide')
+            ]));
+        }
 
         $positions = Tools::getValue('positions');
-        PrestaShopLogger::addLog('Positions reçues: ' . print_r($positions, true));
-
-        if (!$positions || !($positions = json_decode($positions, true))) {
-            PrestaShopLogger::addLog('Positions invalides');
-            die(json_encode(['success' => false]));
+        if (!$positions) {
+            die(json_encode([
+                'success' => false,
+                'message' => $this->trans('Données de position manquantes')
+            ]));
         }
 
-        try {
-            foreach ($positions as $position) {
-                $id_slide = (int)$position['id_slide'];
-                $newPosition = (int)$position['position'];
-
-                PrestaShopLogger::addLog("Mise à jour slide $id_slide position $newPosition");
-
-                $result = Db::getInstance()->update(
-                    's2i_section_slides',
-                    ['position' => $newPosition],
-                    'id_slide = ' . $id_slide
-                );
-
-                if (!$result) {
-                    PrestaShopLogger::addLog("Échec mise à jour position pour slide $id_slide");
-                    die(json_encode(['success' => false]));
-                }
-            }
-
-            PrestaShopLogger::addLog('Toutes les positions mises à jour avec succès');
-            die(json_encode(['success' => true]));
-        } catch (Exception $e) {
-            PrestaShopLogger::addLog('Erreur: ' . $e->getMessage());
-            die(json_encode(['success' => false]));
+        $positions = json_decode($positions, true);
+        if (!is_array($positions)) {
+            die(json_encode([
+                'success' => false,
+                'message' => $this->trans('Format de données invalide')
+            ]));
         }
+
+        $success = true;
+        // Récupérer l'ID de la section pour la requête
+        $first_slide = new Slide((int)$positions[0]['id']);
+        $id_section = $first_slide->id_section;
+
+        // Mettre à jour toutes les positions en une seule requête
+        $cases = [];
+        foreach ($positions as $position) {
+            $cases[] = "WHEN " . (int)$position['id'] . " THEN " . ((int)$position['position'] + 1);
+        }
+
+        if (!empty($cases)) {
+            $sql = "UPDATE `" . _DB_PREFIX_ . "s2i_section_slides` 
+                    SET position = CASE id_slide " . implode(' ', $cases) . " END
+                    WHERE id_section = " . (int)$id_section;
+
+            $success = Db::getInstance()->execute($sql);
+        }
+
+        die(json_encode([
+            'success' => $success,
+            'message' => $success ?
+                $this->trans('Positions mises à jour avec succès') :
+                $this->trans('Erreur lors de la mise à jour des positions')
+        ]));
     }
+
     protected function renderSlideEditForm()
     {
         $id_slide = (int)Tools::getValue('id_slide');
@@ -165,11 +178,13 @@ class AdminS2iImageController extends ModuleAdminController
 
         $editForm = HelperEditSection::renderEditSlideForm($this->module, $id_slide, $slide, $slideLangs);
 
+
         $this->context->smarty->assign([
             'editForm' => $editForm,
             'id_section' => $id_section,
             'id_slide' => $id_slide,
             'slide' => $slide,
+
             'slideLangs' => $slideLangs
         ]);
 
@@ -193,12 +208,14 @@ class AdminS2iImageController extends ModuleAdminController
         $editForm = HelperEditSection::renderEditForm($this->module, $id_section, $id_slide);
         $slideManager = new SlideManager($this->module, $id_section);
         $slidesList = $slideManager->renderSlidesList();
+        $slides = SlidesLists::getSlidesList($id_section);
 
         // Ajout de id_section dans l'assignation
         $this->context->smarty->assign([
             'editForm' => $editForm,
             'slidesList' => $slidesList,
-            'id_section' => $id_section
+            'id_section' => $id_section,
+            'slides' => $slides,
         ]);
 
         return $this->module->display($this->module->getLocalPath(), 'views/templates/admin/panel_section_slide.tpl');
@@ -208,7 +225,6 @@ class AdminS2iImageController extends ModuleAdminController
     {
         $id_section = (int)Tools::getValue('id_section');
 
-        // Vérification de la section avant de continuer
         $section = new Section($id_section);
         if (!Validate::isLoadedObject($section)) {
             $this->errors[] = $this->trans('Section invalide');
@@ -216,6 +232,7 @@ class AdminS2iImageController extends ModuleAdminController
         }
 
         $form = new Form_add_slide();
+
         $add_slide = $form->renderFormAddSlide($this->module, $id_section);
 
         $this->context->smarty->assign([
@@ -358,6 +375,12 @@ class AdminS2iImageController extends ModuleAdminController
             $this->errors[] = $this->trans('Section invalide');
             return false;
         }
+        // Récupérer le nombre actuel de slides pour la position
+        $currentSlidesCount = Db::getInstance()->getValue(
+            'SELECT COUNT(*) 
+            FROM ' . _DB_PREFIX_ . 's2i_section_slides 
+            WHERE id_section = ' . (int)$id_section
+        );
 
         $slide = new Slide();
         $slide->id_section = $id_section;
@@ -365,7 +388,7 @@ class AdminS2iImageController extends ModuleAdminController
         $slide->only_title = (int)Tools::getValue('only_title');
         $slide->title_hide = (int)Tools::getValue('title_hide', 0);
         $slide->image_is_mobile = (int)Tools::getValue('image_mobile_enabled');
-        $slide->position = 0;
+        $slide->position = $currentSlidesCount + 1;
 
         if (!$slide->add()) {
             $this->errors[] = $this->trans('Erreur lors de la création du slide');

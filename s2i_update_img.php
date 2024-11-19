@@ -43,7 +43,7 @@ class S2i_Update_Img extends Module
             || !$this->registerHook('hookDisplayBackOfficeHeader')
             || !$this->createDatabaseTable()
             || !$this->insertDefaultSection()
-            || !$this->installTab()  // Nouvelle ligne
+            || !$this->installTab()
         ) {
             return false;
         }
@@ -125,7 +125,7 @@ class S2i_Update_Img extends Module
             `id_slide` INT(11) NOT NULL AUTO_INCREMENT,
             `id_section` INT(11) NOT NULL,
             `active` TINYINT(1) NOT NULL DEFAULT 1,
-            `position` INT(10) unsigned NOT NULL DEFAULT 0,  
+            `position` INT(10) unsigned NOT NULL DEFAULT 1,  
             `only_title` TINYINT(1) NOT NULL DEFAULT 0,
             `title_hide` TINYINT(1) NOT NULL DEFAULT 0,
             `image_is_mobile` TINYINT(1) NOT NULL DEFAULT 0,
@@ -142,10 +142,10 @@ class S2i_Update_Img extends Module
           `url` VARCHAR(255) NULL,
           `image` VARCHAR(255) NULL,
           `image_mobile` VARCHAR(255) NULL,
-    PRIMARY KEY (`id_slide_lang`),
-    UNIQUE KEY `slide_lang_unique` (`id_slide`, `id_lang`),
-    FOREIGN KEY (`id_slide`) REFERENCES `' . _DB_PREFIX_ . 's2i_section_slides`(`id_slide`) ON DELETE CASCADE
-) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
+          PRIMARY KEY (`id_slide_lang`),
+          UNIQUE KEY `slide_lang_unique` (`id_slide`, `id_lang`),
+            FOREIGN KEY (`id_slide`) REFERENCES `' . _DB_PREFIX_ . 's2i_section_slides`(`id_slide`) ON DELETE CASCADE
+        ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
 
         foreach ($sql as $query) {
