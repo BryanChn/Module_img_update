@@ -18,6 +18,23 @@ class Create_section_form
     public function renderForm()
     {
 
+
+        $helper = new HelperForm();
+        $helper->module = $this->module;
+        $helper->name_controller = 'AdminS2iImage';
+        $helper->currentIndex = Context::getContext()->link->getAdminLink('AdminS2iImage');
+        $helper->token = Tools::getAdminTokenLite('AdminS2iImage');
+        $helper->submit_action = 'submit_create_section';
+        $helper->show_toolbar = false;
+        $helper->show_cancel_button = true;
+        $helper->fields_value = [
+            'name' => Tools::getValue('name', ''),
+            'active' => Tools::getValue('active', 1),
+            'is_slider' => Tools::getValue('is_slider', 0),
+            'speed' => Tools::getValue('speed', 5000),
+            'hook_location[]' => Tools::getValue('hook_location', [])
+        ];
+
         $hooks = [
             ['id' => 'displayHome', 'name' => $this->module->l('Accueil')],
             ['id' => 'displayFooter', 'name' => $this->module->l('Pied de page')],
@@ -84,12 +101,15 @@ class Create_section_form
                     [
                         'type' => 'select',
                         'label' => $this->module->l('Disposition'),
-                        'name' => 'hook_location',
+                        'name' => 'hook_location[]',
+                        'multiple' => true,
                         'options' => [
                             'query' => $hooks,
                             'id' => 'id',
                             'name' => 'name',
                         ],
+                        'desc' => $this->module->l('Sélectionnez un ou plusieurs emplacements'),
+                        'class' => 'chosen'
                     ],
 
 
@@ -97,57 +117,10 @@ class Create_section_form
                 'submit' => [
                     'title' => $this->module->l('Enregistrer'),
                     'class' => 'btn btn-default pull-right',
+
                 ]
             ],
         ];
-
-
-        $helper = new HelperForm();
-        $helper->fields_value = [
-            'name' => Tools::getValue('name', ''),
-            'active' => Tools::getValue('active', 1),
-            'is_slider' => Tools::getValue('is_slider', 0),
-            'speed' => Tools::getValue('speed', 5000),
-            'position' => Tools::getValue('position', 0),
-            'hook_location' => Tools::getValue('hook_location', ''),
-            'only_title' => Tools::getValue('only_title', 0),
-            'title_hide' => Tools::getValue('title_hide', 0),
-            'image_is_mobile' => Tools::getValue('image_is_mobile', 0),
-
-        ];
-        $languages = Language::getLanguages(false);
-        $default_lang = (int)Configuration::get('PS_LANG_DEFAULT');
-
-        // Préparation du tableau des langues avec is_default
-        $helper->languages = [];
-        foreach ($languages as $lang) {
-            $helper->languages[] = array(
-                'id_lang' => $lang['id_lang'],
-                'iso_code' => $lang['iso_code'],
-                'name' => $lang['name'],
-                'is_default' => ($default_lang == $lang['id_lang'] ? 1 : 0)
-            );
-
-            // Initialisation des valeurs pour chaque langue
-            $id_lang = (int)$lang['id_lang'];
-            $helper->fields_value['title_' . $id_lang] = Tools::getValue('title_' . $id_lang, '');
-            $helper->fields_value['legend_' . $id_lang] = Tools::getValue('legend_' . $id_lang, '');
-            $helper->fields_value['url_' . $id_lang] = Tools::getValue('url_' . $id_lang, '');
-            $helper->fields_value['image_' . $id_lang] = '';
-        }
-
-        $helper->default_form_language = $default_lang;
-        $helper->allow_employee_form_lang = Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') ? Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') : $default_lang;
-
-        $helper->module = $this->module;
-        $helper->name_controller = 'create_section_form';
-        $helper->token = Tools::getAdminTokenLite('AdminS2iImage');
-
-
-        $helper->title = $this->module->l('Create New Section');
-        $helper->submit_action = 'submit_create_section';
-        $helper->currentIndex = $this->context->link->getAdminLink('AdminS2iImage', true);
-        $helper->base_folder = _PS_MODULE_DIR_ . 's2i_update_img/views/templates/admin/extendFormSection/helpers/form/';
         return $helper->generateForm([$fields_form]);
     }
 }

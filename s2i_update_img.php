@@ -110,10 +110,6 @@ class S2i_Update_Img extends Module
     {
         $sql = [];
 
-
-        // position section est la position de la section dans le hook
-        // position slide est la position du slide dans la section
-
         // Table principale des sections
         $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 's2i_sections` (
             `id_section` INT(11) NOT NULL AUTO_INCREMENT,
@@ -121,9 +117,16 @@ class S2i_Update_Img extends Module
             `active` TINYINT(1) NOT NULL DEFAULT 1,
             `is_slider` TINYINT(1) NOT NULL DEFAULT 0,
             `speed` INT(11) NOT NULL DEFAULT 5000,
-            `position` INT(10) unsigned NOT NULL DEFAULT 0, 
-            `hook_location` VARCHAR(255) NULL,
+            `position` INT(10) unsigned NOT NULL DEFAULT 0,         
             PRIMARY KEY (`id_section`)
+        ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
+
+        // Table des hooks des sections
+        $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 's2i_section_hooks` (
+            `id_section_hook` INT AUTO_INCREMENT PRIMARY KEY,
+            `id_section` INT NOT NULL,
+            `hook_name` VARCHAR(255) NOT NULL,          
+            FOREIGN KEY (`id_section`) REFERENCES `' . _DB_PREFIX_ . 's2i_sections`(`id_section`) ON DELETE CASCADE
         ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
         // Table des détails des sections
@@ -166,8 +169,8 @@ class S2i_Update_Img extends Module
 
     protected function insertDefaultSection()
     {
-        $sql = 'INSERT INTO `' . _DB_PREFIX_ . 's2i_sections` (`name`, `active`, `is_slider`, `speed`, `position`, `hook_location`)
-            VALUES ("Accueil", 1, 0, 5000, 0, "displayHome")';
+        $sql = 'INSERT INTO `' . _DB_PREFIX_ . 's2i_sections` (`name`, `active`, `is_slider`, `speed`, `position`)
+            VALUES ("Accueil", 1, 0, 5000, 0)';
 
         return Db::getInstance()->execute($sql);
     }

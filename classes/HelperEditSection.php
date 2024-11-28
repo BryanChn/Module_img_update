@@ -5,7 +5,7 @@ class HelperEditSection
     public static function renderEditForm($module, $id_section)
     {
         $section = new Section($id_section);
-
+        $hook_locations = HookLocation::getHookLocations($id_section);
 
         $helper = new HelperForm();
         $helper->show_toolbar = false;
@@ -24,7 +24,7 @@ class HelperEditSection
             'is_slider' => $section->is_slider,
             'speed' => $section->speed,
             'position' => $section->position,
-            'hook_location' => $section->hook_location
+            'hook_location[]' => $hook_locations
         ];
         // différent hooks possibles
         $hooks = [
@@ -82,12 +82,15 @@ class HelperEditSection
                     [
                         'type' => 'select',
                         'label' => $module->l('Disposition'),
-                        'name' => 'hook_location',
+                        'name' => 'hook_location[]',
                         'options' => [
                             'query' => $hooks,
                             'id' => 'id',
                             'name' => 'name',
                         ],
+                        'multiple' => true,
+                        'desc' => $module->l('Sélectionnez un ou plusieurs emplacements'),
+                        'class' => 'chosen'
                     ],
                 ],
                 'submit' => [

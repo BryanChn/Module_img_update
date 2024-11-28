@@ -18,11 +18,11 @@ class Section extends ObjectModel
             'is_slider' => ['type' => self::TYPE_BOOL, 'validate' => 'isBool', 'required' => false],
             'speed' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => false],
             'position' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => false],
-            'hook_location' => ['type' => self::TYPE_STRING, 'validate' => 'isGenericName', 'size' => 255],
+
         ],
     ];
 
-    // gestion des sections par hook
+    // gestion des sections par hook 
     public static function getSectionsByHook($hook_name)
     {
         return Db::getInstance()->executeS('

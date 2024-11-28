@@ -7,6 +7,7 @@ require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/SlideLang.php';
 require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/HelperEditSection.php';
 require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/HelperListSection.php';
 require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/Form_add_slide.php';
+require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/HookLocation.php';
 class AdminS2iImageController extends ModuleAdminController
 {
     protected $positions_identifier = 'id_slide';
@@ -210,6 +211,7 @@ class AdminS2iImageController extends ModuleAdminController
     {
         $id_section = (int)Tools::getValue('id_section');
         $id_slide = (int)Tools::getValue('id_slide');
+        $id_hook_location = (int)Tools::getValue('id_hook_location');
         // Vérification de la section
         $section = new Section($id_section);
         if (!Validate::isLoadedObject($section)) {
@@ -218,7 +220,7 @@ class AdminS2iImageController extends ModuleAdminController
         }
 
         // Préparation des données
-        $editForm = HelperEditSection::renderEditForm($this->module, $id_section, $id_slide);
+        $editForm = HelperEditSection::renderEditForm($this->module, $id_section, $id_slide, $id_hook_location);
         $slideManager = new SlideManager($this->module, $id_section);
         $slidesList = $slideManager->renderSlidesList();
         $slides = SlidesLists::getSlidesList($id_section);
@@ -271,6 +273,7 @@ class AdminS2iImageController extends ModuleAdminController
 
     public function handleCreateSection()
     {
+        $db = Db::getInstance();
         // Création de la section principale
         $section = new Section();
         $section->name = Tools::getValue('name');
@@ -278,9 +281,8 @@ class AdminS2iImageController extends ModuleAdminController
         $section->is_slider = (int)Tools::getValue('is_slider');
         $section->speed = (int)Tools::getValue('speed', 5000);
         $section->position = (int)Tools::getValue('position', 0);
-        $section->hook_location = Tools::getValue('hook_location');
 
-        // Vérification du nom unique
+        // Vérif si le existe ou si il est unique
         $sectionName = Tools::getValue('name');
         if (empty($sectionName)) {
             $this->errors[] = $this->trans('Le nom de la section est requis');
@@ -301,48 +303,19 @@ class AdminS2iImageController extends ModuleAdminController
             return false;
         }
 
-        // Création du slide initial
-        $slide = new Slide();
-        $slide->id_section = $section->id;
-        $slide->active = (int)Tools::getValue('active');
-        $slide->only_title = (int)Tools::getValue('only_title');
-        $slide->title_hide = (int)Tools::getValue('title_hide', 0);
-        $slide->image_is_mobile = (int)Tools::getValue('image_is_mobile');
-        $slide->position = 0;
+        // Insertion des hooks sélectionnés multiples
+        $selectedHooks = Tools::getValue('hook_location');
+        if (is_array($selectedHooks)) {
+            foreach ($selectedHooks as $hookName) {
+                $result = $db->insert('s2i_section_hooks', [
+                    'id_section' => (int)$section->id,
+                    'hook_name' => pSQL($hookName)
+                ]);
 
-        if (!$slide->add()) {
-            $this->errors[] = $this->trans('Erreur lors de la création du slide');
-            return false;
-        }
-
-        // Gestion des traductions pour le slide
-        foreach (Language::getLanguages(true) as $lang) {
-            $slideLang = new SlideLang();
-            $slideLang->id_slide = $slide->id;
-            $slideLang->id_lang = (int)$lang['id_lang'];
-            $slideLang->title = Tools::getValue('title_' . $lang['id_lang']);
-            $slideLang->legend = Tools::getValue('legend_' . $lang['id_lang']);
-            $slideLang->url = Tools::getValue('url_' . $lang['id_lang']);
-
-            // Gestion des images
-            if (isset($_FILES['image_' . $lang['id_lang']]) && !empty($_FILES['image_' . $lang['id_lang']]['name'])) {
-                $imagePath = $this->handleImageUpload($section->name, $lang['id_lang']);
-                if ($imagePath) {
-                    $slideLang->image = $imagePath;
+                if (!$result) {
+                    $this->errors[] = $this->trans('Erreur lors de l\'association du hook: ') . $hookName;
+                    return false;
                 }
-            }
-
-            // Gestion des images mobiles
-            if (isset($_FILES['image_mobile_' . $lang['id_lang']]) && !empty($_FILES['image_mobile_' . $lang['id_lang']]['name'])) {
-                $imagePath = $this->handleImageUpload($section->name, $lang['id_lang'], true);
-                if ($imagePath) {
-                    $slideLang->image_mobile = $imagePath;
-                }
-            }
-
-            if (!$slideLang->add()) {
-                $this->errors[] = $this->trans('Erreur lors de l\'ajout des traductions');
-                return false;
             }
         }
 
@@ -424,19 +397,40 @@ class AdminS2iImageController extends ModuleAdminController
     }
     protected function handleUpdateSectionOnly()
     {
+        $db = Db::getInstance();
         $id_section = (int)Tools::getValue('id_section');
         $section = new Section($id_section);
 
+        // Mise à jour des informations de base de la section
         $section->name = Tools::getValue('name');
         $section->active = (int)Tools::getValue('active');
         $section->is_slider = (int)Tools::getValue('is_slider');
         $section->speed = (int)Tools::getValue('speed');
         $section->position = (int)Tools::getValue('position', 0);
-        $section->hook_location = Tools::getValue('hook_location');
 
         if (!$section->update()) {
             $this->errors[] = $this->trans('Erreur lors de la mise à jour de la section');
             return false;
+        }
+
+        // Gestion des hooks
+        // 1. Supprimer les anciens hooks
+        $db->delete('s2i_section_hooks', 'id_section = ' . (int)$id_section);
+
+        // 2. Ajouter les nouveaux hooks sélectionnés
+        $selectedHooks = Tools::getValue('hook_location');
+        if (is_array($selectedHooks)) {
+            foreach ($selectedHooks as $hookName) {
+                $result = $db->insert('s2i_section_hooks', [
+                    'id_section' => (int)$id_section,
+                    'hook_name' => pSQL($hookName)
+                ]);
+
+                if (!$result) {
+                    $this->errors[] = $this->trans('Erreur lors de la mise à jour du hook: ') . $hookName;
+                    return false;
+                }
+            }
         }
 
         $this->context->cookie->__set('s2i_success_message', 'Section mise à jour avec succès');
