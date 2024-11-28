@@ -26,6 +26,15 @@ class HelperEditSection
             'position' => $section->position,
             'hook_location' => $section->hook_location
         ];
+        // différent hooks possibles
+        $hooks = [
+            ['id' => 'displayHome', 'name' => $module->l('Accueil')],
+            ['id' => 'displayFooter', 'name' => $module->l('Pied de page')],
+            ['id' => 'displayProduct', 'name' => $module->l('Produit')],
+            // ['id' => 'displayJolisearch', 'name' => $module->l('Menu de recherche jolisearch hello-moon')],
+            ['id' => 'displaySearch', 'name' => $module->l('Menu de recherche')],
+            ['id' => 'displaySlideTitle', 'name' => $module->l('test')],
+        ];
 
         $fields_form = [
             'form' => [
@@ -70,7 +79,16 @@ class HelperEditSection
                         'name' => 'speed',
                         'suffix' => 'ms'
                     ],
-
+                    [
+                        'type' => 'select',
+                        'label' => $module->l('Disposition'),
+                        'name' => 'hook_location',
+                        'options' => [
+                            'query' => $hooks,
+                            'id' => 'id',
+                            'name' => 'name',
+                        ],
+                    ],
                 ],
                 'submit' => [
                     'title' => $module->l('Enregistrer'),

@@ -83,7 +83,6 @@
             function toggleOnlyTitleFields() {
                 var onlyTitle = $('input[name="only_title"]:checked').val() == 1;
                 if (onlyTitle) {
-                    $('.legend-url-group').closest('.form-group').hide();
                     $('input[name="image_is_mobile"]').closest('.form-group').hide();
                     $('.mobile-image').hide().closest('.form-group').hide();
                     $('.image').hide().closest('.form-group').hide();
@@ -92,7 +91,6 @@
 
 
                 } else {
-                    $('.legend-url-group').closest('.form-group').show();
                     $('input[name="image_is_mobile"]').closest('.form-group').show();
                     $('.mobile-image').show().closest('.form-group').show();
                     $('.image').show().closest('.form-group').show();

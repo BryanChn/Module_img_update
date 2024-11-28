@@ -36,11 +36,17 @@ class S2i_Update_Img extends Module
 
     public function install()
     {
-        // Ajout de l'installation du controller admin
         if (
             !parent::install()
             || !$this->registerHook('hookActionAdminControllerSetMedia')
             || !$this->registerHook('hookDisplayBackOfficeHeader')
+            || !$this->registerHook('displayHome')
+            || !$this->registerHook('displayFooter')
+            || !$this->registerHook('displayCategoriesFooter')
+            || !$this->registerHook('displayTop')
+            || !$this->registerHook('displaySearch')
+            || !$this->registerHook('displayJolisearch')
+            || !$this->registerHook('displaySlideTitle')
             || !$this->createDatabaseTable()
             || !$this->insertDefaultSection()
             || !$this->installTab()
@@ -52,8 +58,8 @@ class S2i_Update_Img extends Module
 
     public function uninstall()
     {
-        // Ajout de la désinstallation du controller admin
-        $this->uninstallTab();  // Nouvelle ligne
+
+        $this->uninstallTab();
         return parent::uninstall();
     }
 
@@ -68,7 +74,7 @@ class S2i_Update_Img extends Module
             $tab->name[$lang['id_lang']] = 'S2i Image';
         }
 
-        // Récupération de l'ID parent via requête directe
+
         $parentTabID = (int)Db::getInstance()->getValue(
             '
             SELECT id_tab 
@@ -169,6 +175,31 @@ class S2i_Update_Img extends Module
     public function getSection()
     {
         return HelperListSection::renderSectionList($this);
+    }
+
+
+
+    public function hookDisplaySlideTitle()
+    {
+
+        $sections = Section::getSectionsByHook('displaySlideTitle');
+
+        $allSlides = [];
+        foreach ($sections as $section) {
+            $slides = SlidesLists::getSlidesList($section['id_section']);
+
+            $filteredSlides = array_filter($slides, function ($slide) {
+                return $slide['active'] && $slide['only_title'];
+            });
+            $allSlides = array_merge($allSlides, $filteredSlides);
+        }
+
+        $this->context->smarty->assign([
+            'search_slides' => $allSlides,
+
+        ]);
+
+        return $this->display(__FILE__, 'views/templates/hook/search-menu.tpl');
     }
 
 

@@ -18,6 +18,15 @@ class Create_section_form
     public function renderForm()
     {
 
+        $hooks = [
+            ['id' => 'displayHome', 'name' => $this->module->l('Accueil')],
+            ['id' => 'displayFooter', 'name' => $this->module->l('Pied de page')],
+            ['id' => 'displayProduct', 'name' => $this->module->l('Produit')],
+            // ['id' => 'displayJolisearch', 'name' => $this->module->l('Menu de recherche jolisearch hello-moon')],
+            ['id' => 'displaySearch', 'name' => $this->module->l('Menu de recherche')],
+            ['id' => 'displaySlideTitle', 'name' => $this->module->l('test')],
+        ];
+
         $fields_form = [
             'form' => [
                 'legend' => [
@@ -72,106 +81,18 @@ class Create_section_form
                         'desc' => $this->module->l('Vitesse en millisecondes'),
                         'required' => false,
                     ],
-
                     [
-                        'type' => 'switch',
-                        'label' => $this->module->l('Titre seulement ?'),
-                        'name' => 'only_title',
-                        'values' => [
-                            [
-                                'id' => 'only_title_on',
-                                'value' => 1,
-                                'label' => $this->module->l('Oui')
-                            ],
-                            [
-                                'id' => 'only_title_off',
-                                'value' => 0,
-                                'label' => $this->module->l('Non')
-                            ]
-                        ],
-                        'desc' => $this->module->l('Si activé, seul le titre sera affiché.'),
-                    ],
-                    [
-                        'type' => 'switch',
-                        'label' => $this->module->l('Cacher le titre ?'),
-                        'name' => 'title_hide',
-                        'values' => [
-                            [
-                                'id' => 'title_hide_on',
-                                'value' => 1,
-                                'label' => $this->module->l('Oui')
-                            ],
-                            [
-                                'id' => 'title_hide_off',
-                                'value' => 0,
-                                'label' => $this->module->l('Non')
-                            ]
+                        'type' => 'select',
+                        'label' => $this->module->l('Disposition'),
+                        'name' => 'hook_location',
+                        'options' => [
+                            'query' => $hooks,
+                            'id' => 'id',
+                            'name' => 'name',
                         ],
                     ],
-                    [
-                        'type' => 'text',
-                        'label' => $this->module->l('Titre'),
-                        'name' => 'title',
-                        'lang' => true,
-                        'required' => true,
-                    ],
-                    [
-                        'type' => 'text',
-                        'label' => $this->module->l('Légende'),
-                        'name' => 'legend',
-                        'lang' => true,
-                        'class' => 'optional-field',
-                        'form_group_class' => 'legend-url-group',
-                        'group_name' => 'text_fields'
-                    ],
-                    [
-                        'type' => 'text',
-                        'label' => $this->module->l('URL'),
-                        'name' => 'url',
-                        'lang' => true,
-                        'class' => 'optional-field',
-                        'form_group_class' => 'legend-url-group',
-                        'group_name' => 'text_fields'
-                    ],
-                    [
-                        'type' => 'switch',
-                        'label' => $this->module->l('Image pour mobile ?'),
-                        'name' => 'image_is_mobile',
-                        'class' => 'optional-field',
-                        'values' => [
-                            [
-                                'id' => 'image_mobile_enabled_on',
-                                'value' => 1,
-                                'label' => $this->module->l('Oui')
-                            ],
-                            [
-                                'id' => 'image_mobile_enabled_off',
-                                'value' => 0,
-                                'label' => $this->module->l('Non')
-                            ]
-                        ],
-                        'desc' => $this->module->l('Si activé, l\'image sera affichée sur mobile.'),
-                    ],
 
-                    [
-                        'type' => 'file_lang',
-                        'label' => $this->module->l('Image non mobile'),
-                        'name' => 'image',
-                        'required' => false,
-                        'group_name' => 'images',
-                        'class' => 'optional-field',
 
-                    ],
-
-                    [
-                        'type' => 'file_lang',
-                        'name' => 'image_mobile',
-                        'required' => false,
-                        'group_name' => 'images_mobile',
-                        'class' => 'optional-field',
-                        'label' => $this->module->l('Image mobile'),
-                        'form_group_class' => 'mobile-image',
-                    ]
                 ],
                 'submit' => [
                     'title' => $this->module->l('Enregistrer'),

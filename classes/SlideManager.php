@@ -32,7 +32,17 @@ class SlideManager
 
         foreach ($slides as &$slide) {
             $slide_lang = SlideLang::getBySlideAndLang($slide['id_slide'], $id_lang);
-            $slide = array_merge($slide, $slide_lang ?: []);
+            // Initialiser les valeurs par défaut si slide_lang est vide
+            if (!$slide_lang) {
+                $slide_lang = [
+                    'title' => '',
+                    'legend' => '',
+                    'url' => '',
+                    'image' => null,
+                    'image_mobile' => null
+                ];
+            }
+            $slide = array_merge($slide, $slide_lang);
         }
 
         return $slides;

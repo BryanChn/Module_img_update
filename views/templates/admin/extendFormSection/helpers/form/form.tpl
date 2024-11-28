@@ -60,40 +60,35 @@
 {block name="after"}
     <script type="text/javascript">
         $(document).ready(function() {
-            // Gestion de l'affichage des champs en fonction de only_title
-        function toggleOnlyTitleFields() {
-            var onlyTitle = $('#only_title_on').prop('checked');
-            if (onlyTitle) {
-                // Cache tous les champs optionnels
-                $('.legend-url-group').hide(); // Utilise la nouvelle classe
-                $('div.row').closest('.form-group').hide();
-                $('[name="image_is_mobile"]').closest('.form-group').hide();
-            } else {
-                // Réaffiche tous les champs
-                $('.legend-url-group').show(); // Utilise la nouvelle classe
-                $('div.row').closest('.form-group').show();
-                $('[name="image_is_mobile"]').closest('.form-group').show();
 
+            function toggleOnlyTitleFields() {
+                var onlyTitle = $('#only_title_on').prop('checked');
+                if (onlyTitle) {
+                    $('div.row').closest('.form-group').hide();
+                    $('[name="image_is_mobile"]').closest('.form-group').hide();
+                } else {
+                    $('div.row').closest('.form-group').show();
+                    $('[name="image_is_mobile"]').closest('.form-group').show();
+
+                }
             }
-        }
 
-        // Gestion de l'affichage de l'upload mobile
-        function toggleMobileImageUpload() {
-            var isMobile = $('#image_is_mobile_on').prop('checked');
-            if (isMobile) {
-                $('.mobile-image').show();
-            } else {
-                $('.mobile-image').hide();
+
+            function toggleMobileImageUpload() {
+                var isMobile = $('#image_is_mobile_on').prop('checked');
+                if (isMobile) {
+                    $('.mobile-image').show();
+                } else {
+                    $('.mobile-image').hide();
+                }
             }
-        }
 
-        // Initialisation
-        toggleOnlyTitleFields();
-        toggleMobileImageUpload();
+            toggleOnlyTitleFields();
+            toggleMobileImageUpload();
 
-        // Événements
-        $('input[name="only_title"]').change(toggleOnlyTitleFields);
-        $('input[name="image_is_mobile"]').change(toggleMobileImageUpload);
+
+            $('input[name="only_title"]').change(toggleOnlyTitleFields);
+            $('input[name="image_is_mobile"]').change(toggleMobileImageUpload);
         });
     </script>
 {/block}

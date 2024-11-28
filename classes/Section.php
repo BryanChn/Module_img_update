@@ -21,4 +21,15 @@ class Section extends ObjectModel
             'hook_location' => ['type' => self::TYPE_STRING, 'validate' => 'isGenericName', 'size' => 255],
         ],
     ];
+
+    // gestion des sections par hook
+    public static function getSectionsByHook($hook_name)
+    {
+        return Db::getInstance()->executeS('
+        SELECT * FROM `' . _DB_PREFIX_ . 's2i_sections`
+        WHERE `hook_location` = "' . pSQL($hook_name) . '"
+        AND `active` = 1
+        ORDER BY `position` ASC
+    ');
+    }
 }

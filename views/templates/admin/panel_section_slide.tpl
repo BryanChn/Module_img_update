@@ -119,7 +119,7 @@
                                     </span>
                                 </td>
                                 <td class="center">
-                                    {if $slide.image}
+                                    {if isset($slide.image) && $slide.image}
                                         <img src="{$link->getBaseLink()}{$img_dir}{$slide.image}" alt="" class="img-thumbnail"
                                             style="max-height: 90px;">
                                     {else}
@@ -134,8 +134,8 @@
                                             <i class="icon-edit"></i>
                                         </a>
                                         <a href="{$link->getAdminLink('AdminS2iImage')}&id_section={$id_section}&id_slide={$slide.id_slide}&deletes2i_section_slides"
-                                            class="btn btn-default"
-                                            onclick="return confirm('{l s='Êtes-vous sûr de vouloir supprimer ce slide ?' mod='s2i_update_img'}');">
+                                            class="btn btn-default delete-slide"
+                                            onclick="return confirm('{l s='Attention ! Cette action supprimera définitivement le slide et ses images. Êtes-vous sûr de vouloir continuer ?' mod='s2i_update_img'}');">
                                             <i class="icon-trash"></i>
                                         </a>
                                     </div>

@@ -28,6 +28,12 @@ class AdminS2iImageController extends ModuleAdminController
 
     public function postProcess()
     {
+        if (Tools::isSubmit('delete' . $this->table)) {
+            parent::postProcess();
+            Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true) . '&configure=s2i_update_img');
+            return;
+        }
+
         if (Tools::isSubmit('submit_create_section')) {
             if ($this->handleCreateSection()) {
                 Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true) . "&configure=s2i_update_img");
@@ -58,6 +64,13 @@ class AdminS2iImageController extends ModuleAdminController
             if ($this->handleUpdateSlide()) {
                 $id_section = (int)Tools::getValue('id_section');
                 Tools::redirectAdmin($this->context->link->getAdminLink('AdminS2iImage', true) . '&id_section=' . $id_section);
+            }
+            return;
+        }
+        if (Tools::isSubmit('deletes2i_section_slides')) {
+            if ($this->handleDeleteSlide()) {
+                $id_section = (int)Tools::getValue('id_section');
+                Tools::redirectAdmin($this->context->link->getAdminLink('AdminS2iImage') . '&id_section=' . $id_section);
             }
             return;
         }
@@ -339,7 +352,76 @@ class AdminS2iImageController extends ModuleAdminController
         return true;
     }
 
+    protected function handleDeleteSlide()
+    {
+        $id_slide = (int)Tools::getValue('id_slide');
 
+        // Vérifier si le slide existe
+        $slide = new Slide($id_slide);
+        if (!Validate::isLoadedObject($slide)) {
+            $this->errors[] = $this->trans('Slide introuvable');
+            return false;
+        }
+
+        // Supprimer d'abord les images associées
+        $slideLangs = Db::getInstance()->executeS(
+            '
+        SELECT image, image_mobile 
+        FROM ' . _DB_PREFIX_ . 's2i_slides_lang 
+        WHERE id_slide = ' . (int)$id_slide
+        );
+
+        foreach ($slideLangs as $slideLang) {
+            // Supprimer l'image principale
+            if (!empty($slideLang['image'])) {
+                $imagePath = _PS_IMG_DIR_ . $slideLang['image'];
+                if (file_exists($imagePath)) {
+                    unlink($imagePath);
+                }
+            }
+
+            // Supprimer l'image mobile
+            if (!empty($slideLang['image_mobile'])) {
+                $imageMobilePath = _PS_IMG_DIR_ . $slideLang['image_mobile'];
+                if (file_exists($imageMobilePath)) {
+                    unlink($imageMobilePath);
+                }
+            }
+        }
+
+        // Supprimer les traductions
+        Db::getInstance()->execute(
+            '
+        DELETE FROM ' . _DB_PREFIX_ . 's2i_slides_lang 
+        WHERE id_slide = ' . (int)$id_slide
+        );
+
+        // Supprimer le slide
+        if (!$slide->delete()) {
+            $this->errors[] = $this->trans('Erreur lors de la suppression du slide');
+            return false;
+        }
+
+        // Reorganise les positions
+        Db::getInstance()->execute(
+            '
+        UPDATE ' . _DB_PREFIX_ . 's2i_section_slides ss
+        JOIN (
+        SELECT id_slide, @row_number:=@row_number+1 AS new_position
+        FROM ' . _DB_PREFIX_ . 's2i_section_slides, 
+        (SELECT @row_number:=0) AS t
+        WHERE id_section = ' . (int)$slide->id_section . '
+        ORDER BY position ASC) AS ranked
+        ON ss.id_slide = ranked.id_slide
+        SET ss.position = ranked.new_position
+        WHERE ss.id_section = ' . (int)$slide->id_section
+        );
+
+        $this->context->cookie->__set('s2i_success_message', 'Slide supprimé avec succès');
+        $this->context->cookie->write();
+
+        return true;
+    }
     protected function handleUpdateSectionOnly()
     {
         $id_section = (int)Tools::getValue('id_section');
@@ -347,7 +429,7 @@ class AdminS2iImageController extends ModuleAdminController
 
         $section->name = Tools::getValue('name');
         $section->active = (int)Tools::getValue('active');
-        $section->is_slider = (int)Tools::getValue('slider');
+        $section->is_slider = (int)Tools::getValue('is_slider');
         $section->speed = (int)Tools::getValue('speed');
         $section->position = (int)Tools::getValue('position', 0);
         $section->hook_location = Tools::getValue('hook_location');
