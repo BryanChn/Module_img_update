@@ -23,7 +23,7 @@ class S2i_Update_Img extends Module
         $this->name = 's2i_update_img';
         $this->tab = 'administration';
         $this->version = '1.0.0';
-        $this->author = 'Votre nom';
+        $this->author = 'S2i';
         $this->need_instance = 0;
         $this->bootstrap = true;
         parent::__construct();
