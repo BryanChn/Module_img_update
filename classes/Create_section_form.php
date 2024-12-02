@@ -17,8 +17,6 @@ class Create_section_form
 
     public function renderForm()
     {
-
-
         $helper = new HelperForm();
         $helper->module = $this->module;
         $helper->name_controller = 'AdminS2iImage';
@@ -34,14 +32,12 @@ class Create_section_form
             'speed' => Tools::getValue('speed', 5000),
             'hook_location[]' => Tools::getValue('hook_location', [])
         ];
-
+        // différent hooks possibles && ajoutez ici les hooks que vous souhaitez
         $hooks = [
             ['id' => 'displayHome', 'name' => $this->module->l('Accueil')],
             ['id' => 'displayFooter', 'name' => $this->module->l('Pied de page')],
-            ['id' => 'displayProduct', 'name' => $this->module->l('Produit')],
-            // ['id' => 'displayJolisearch', 'name' => $this->module->l('Menu de recherche jolisearch hello-moon')],
-            ['id' => 'displaySearch', 'name' => $this->module->l('Menu de recherche')],
             ['id' => 'displaySlideTitle', 'name' => $this->module->l('test')],
+            ['id' => 'displayNav1', 'name' => $this->module->l('Menu de navigation')],
         ];
 
         $fields_form = [
@@ -89,7 +85,21 @@ class Create_section_form
                                 'label' => $this->module->l('Non')
                             ]
                         ],
-                        'desc' => $this->module->l('Si activé, vous pouvez choisir sa vitesse.'),
+                        'desc' => $this->module->l('Si activé, vous pouvez choisir sa vitesse.') .
+                            '<script>
+                        $(document).ready(function() {
+                            function toggleSpeedField() {
+                                if ($("input[name=\'is_slider\']:checked").val() == 1) {
+                                    $("input[name=\'speed\']").closest(".form-group").show();
+                                } else {
+                                    $("input[name=\'speed\']").closest(".form-group").hide();
+                                }
+                            }
+                            
+                            toggleSpeedField();
+                            $("input[name=\'is_slider\']").change(toggleSpeedField);
+                        });
+                    </script>'
                     ],
                     [
                         'type' => 'text',

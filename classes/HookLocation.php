@@ -26,4 +26,16 @@ class HookLocation extends ObjectModel
         // Retourne un tableau simple des noms de hooks
         return array_column($results, 'hook_name');
     }
+
+    public static function getSectionsByHook($hook_name)
+    {
+        return Db::getInstance()->executeS('
+            SELECT s.* 
+            FROM `' . _DB_PREFIX_ . 's2i_sections` s
+            JOIN `' . _DB_PREFIX_ . 's2i_section_hooks` sh ON s.id_section = sh.id_section
+            WHERE sh.hook_name = "' . pSQL($hook_name) . '"
+            AND s.active = 1
+            ORDER BY s.position ASC
+        ');
+    }
 }

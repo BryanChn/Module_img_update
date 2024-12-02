@@ -1,21 +1,19 @@
 <div class="search-menu-wrapper">
-    {if isset($search_slides) && $search_slides}
+    {if isset($slides) && $slides|count > 0}
         <div class="search-slides">
             <ul class="search-slides-list">
-                {foreach from=$search_slides item=slide}
-                    {if $slide.url}
-                        <li class="search-slide-item">
+                {foreach from=$slides item=slide}
+                    <li class="search-slide-item">
+                        {if $slide.url}
                             <button class="button-80" role="button">
                                 <a href="{$slide.url|escape:'html':'UTF-8'}">
                                     {$slide.title|escape:'html':'UTF-8'}
                                 </a>
                             </button>
-                        </li>
-                    {else}
-                        <li class="search-slide-item">
+                        {else}
                             {$slide.title|escape:'html':'UTF-8'}
-                        </li>
-                    {/if}
+                        {/if}
+                    </li>
                 {/foreach}
             </ul>
         </div>

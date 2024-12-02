@@ -4,8 +4,6 @@ class Form_add_slide
 {
     public function renderFormAddSlide($module, $id_section)
     {
-
-
         $helper = new HelperForm();
         $helper->show_toolbar = false;
         $helper->module = $module;

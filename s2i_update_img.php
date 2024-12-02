@@ -11,6 +11,7 @@ require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/HelperListSection.php';
 require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/Create_section_form.php';
 require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/HelperEditSection.php';
 require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/SlideManager.php';
+require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/HookLocation.php';
 require_once dirname(__FILE__) . '/../../config/config.inc.php';
 
 
@@ -38,15 +39,13 @@ class S2i_Update_Img extends Module
     {
         if (
             !parent::install()
+            // ajouter les différents hooks voulus 
             || !$this->registerHook('hookActionAdminControllerSetMedia')
             || !$this->registerHook('hookDisplayBackOfficeHeader')
             || !$this->registerHook('displayHome')
             || !$this->registerHook('displayFooter')
-            || !$this->registerHook('displayCategoriesFooter')
-            || !$this->registerHook('displayTop')
-            || !$this->registerHook('displaySearch')
-            || !$this->registerHook('displayJolisearch')
             || !$this->registerHook('displaySlideTitle')
+            || !$this->registerHook('displayNav1')
             || !$this->createDatabaseTable()
             || !$this->insertDefaultSection()
             || !$this->installTab()
@@ -180,34 +179,7 @@ class S2i_Update_Img extends Module
         return HelperListSection::renderSectionList($this);
     }
 
-
-
-    public function hookDisplaySlideTitle()
-    {
-
-        $sections = Section::getSectionsByHook('displaySlideTitle');
-
-        $allSlides = [];
-        foreach ($sections as $section) {
-            $slides = SlidesLists::getSlidesList($section['id_section']);
-
-            $filteredSlides = array_filter($slides, function ($slide) {
-                return $slide['active'] && $slide['only_title'];
-            });
-            $allSlides = array_merge($allSlides, $filteredSlides);
-        }
-
-        $this->context->smarty->assign([
-            'search_slides' => $allSlides,
-
-        ]);
-
-        return $this->display(__FILE__, 'views/templates/hook/search-menu.tpl');
-    }
-
-
     public function getContent()
-
     {
 
         $form = new Create_section_form($this);
@@ -230,5 +202,70 @@ class S2i_Update_Img extends Module
 
 
         return $this->context->smarty->fetch($this->local_path . 'views/templates/admin/configuration.tpl');
+    }
+
+    // partie gestion hooks
+    private function displaySlidesForHook($hookName)
+    {
+        // Récupère les sections liées au hook spécifié
+        $sections = HookLocation::getSectionsByHook($hookName);
+
+        $allSlides = [];
+        foreach ($sections as $section) {
+
+            $slides = SlidesLists::getSlidesList($section['id_section']);
+
+            // Filtre les slides actifs
+            $filteredSlides = array_filter($slides, function ($slide) use ($hookName) {
+                $isActive = $slide['active'];
+
+                // verif de only_title
+                if ($hookName === 'displaySlideTitle') {
+                    return $isActive && $slide['only_title'];
+                }
+
+                return $isActive;
+            });
+
+            if (!empty($filteredSlides)) {
+                // Ajoute les informations de la section aux slides
+                foreach ($filteredSlides as &$slide) {
+                    $slide['is_slider'] = $section['is_slider'];
+                    $slide['speed'] = $section['speed'];
+                }
+                $allSlides = array_merge($allSlides, $filteredSlides);
+            }
+        }
+        usort($allSlides, function ($a, $b) {
+            return $a['position'] - $b['position'];
+        });
+
+        $this->context->smarty->assign([
+            'slides' => $allSlides,
+            'hook_name' => $hookName
+        ]);
+
+        // Sélectionne le template approprié selon le hook && ajoutez ici les templates voulus
+        $template = 'default-slides.tpl';
+        if ($hookName === 'displaySlideTitle') {
+            $template = 'search-menu.tpl';
+        }
+
+
+        return $this->display(__FILE__, 'views/templates/hook/' . $template);
+    }
+
+    public function hookDisplayNav1()
+    {
+        return $this->displaySlidesForHook('displayNav1');
+    }
+    public function hookDisplaySlideTitle()
+    {
+        return $this->displaySlidesForHook('displaySlideTitle');
+    }
+
+    public function hookDisplayFooter()
+    {
+        return $this->displaySlidesForHook('displayFooter');
     }
 }
