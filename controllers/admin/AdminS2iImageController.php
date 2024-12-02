@@ -290,7 +290,7 @@ class AdminS2iImageController extends ModuleAdminController
         }
 
         $existingSection = Db::getInstance()->getValue(
-            'SELECT id_section FROM ' . _DB_PREFIX_ . 's2i_sections WHERE name = "' . pSQL($sectionName) . '"'
+            'SELECT id_section FROM `' . _DB_PREFIX_ . 's2i_sections` WHERE name = "' . pSQL($sectionName) . '"'
         );
 
         if ($existingSection) {
@@ -340,7 +340,7 @@ class AdminS2iImageController extends ModuleAdminController
         $slideLangs = Db::getInstance()->executeS(
             '
         SELECT image, image_mobile 
-        FROM ' . _DB_PREFIX_ . 's2i_slides_lang 
+        FROM `' . _DB_PREFIX_ . 's2i_slides_lang` 
         WHERE id_slide = ' . (int)$id_slide
         );
 
@@ -365,7 +365,7 @@ class AdminS2iImageController extends ModuleAdminController
         // Supprimer les traductions
         Db::getInstance()->execute(
             '
-        DELETE FROM ' . _DB_PREFIX_ . 's2i_slides_lang 
+        DELETE FROM `' . _DB_PREFIX_ . 's2i_slides_lang` 
         WHERE id_slide = ' . (int)$id_slide
         );
 
@@ -378,10 +378,10 @@ class AdminS2iImageController extends ModuleAdminController
         // Reorganise les positions
         Db::getInstance()->execute(
             '
-        UPDATE ' . _DB_PREFIX_ . 's2i_section_slides ss
+        UPDATE `' . _DB_PREFIX_ . 's2i_section_slides` ss
         JOIN (
         SELECT id_slide, @row_number:=@row_number+1 AS new_position
-        FROM ' . _DB_PREFIX_ . 's2i_section_slides, 
+        FROM `' . _DB_PREFIX_ . 's2i_section_slides`, 
         (SELECT @row_number:=0) AS t
         WHERE id_section = ' . (int)$slide->id_section . '
         ORDER BY position ASC) AS ranked
@@ -454,7 +454,7 @@ class AdminS2iImageController extends ModuleAdminController
         // Récupérer le nombre actuel de slides pour la position
         $currentSlidesCount = Db::getInstance()->getValue(
             'SELECT COUNT(*) 
-            FROM ' . _DB_PREFIX_ . 's2i_section_slides 
+            FROM `' . _DB_PREFIX_ . 's2i_section_slides` 
             WHERE id_section = ' . (int)$id_section
         );
 

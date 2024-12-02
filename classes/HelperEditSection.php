@@ -27,10 +27,8 @@ class HelperEditSection
         ];
         // différent hooks possibles && ajoutez ici les hooks que vous souhaitez
         $hooks = [
-            ['id' => 'displayHome', 'name' => $module->l('Accueil')],
             ['id' => 'displayFooter', 'name' => $module->l('Pied de page')],
             ['id' => 'displaySlideTitle', 'name' => $module->l('Titre des slides')],
-            ['id' => 'displayNav1', 'name' => $module->l('Menu de navigation')],
         ];
 
         $fields_form = [

@@ -95,8 +95,8 @@ class SlidesLists
         $id_lang = $context->language->id;
 
         $sql = 'SELECT ss.*, sl.title, sl.legend, sl.url
-        FROM ' . _DB_PREFIX_ . 's2i_section_slides ss
-        LEFT JOIN ' . _DB_PREFIX_ . 's2i_slides_lang sl 
+        FROM `' . _DB_PREFIX_ . 's2i_section_slides` ss
+        LEFT JOIN `' . _DB_PREFIX_ . 's2i_slides_lang` sl 
         ON ss.id_slide = sl.id_slide 
         AND sl.id_lang = ' . (int)$id_lang . '
         WHERE ss.id_section = ' . (int)$id_section . '

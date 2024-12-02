@@ -42,7 +42,7 @@ class HelperListSection
 
         $sections = Db::getInstance()->executeS('
             SELECT id_section, name, active 
-            FROM ' . _DB_PREFIX_ . 's2i_sections
+            FROM `' . _DB_PREFIX_ . 's2i_sections`
             ORDER BY id_section ASC
         ');
 

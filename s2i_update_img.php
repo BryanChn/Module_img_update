@@ -26,27 +26,21 @@ class S2i_Update_Img extends Module
         $this->author = 'Votre nom';
         $this->need_instance = 0;
         $this->bootstrap = true;
-
-
         parent::__construct();
-
         $this->displayName = $this->trans('S2I Update Image', [], 'Modules.S2iUpdateImg.Admin');
         $this->description = $this->trans('Changez vos photos via notre interface', [], 'Modules.S2iUpdateImg.Admin');
     }
-
-
     public function install()
     {
+        if (!$this->createDatabaseTable()) {
+            return false;
+        }
         if (
             !parent::install()
-            // ajouter les différents hooks voulus 
-            || !$this->registerHook('hookActionAdminControllerSetMedia')
-            || !$this->registerHook('hookDisplayBackOfficeHeader')
-            || !$this->registerHook('displayHome')
+            // ajouter les différents hooks voulus
+
             || !$this->registerHook('displayFooter')
             || !$this->registerHook('displaySlideTitle')
-            || !$this->registerHook('displayNav1')
-            || !$this->createDatabaseTable()
             || !$this->insertDefaultSection()
             || !$this->installTab()
         ) {
@@ -57,7 +51,6 @@ class S2i_Update_Img extends Module
 
     public function uninstall()
     {
-
         $this->uninstallTab();
         return parent::uninstall();
     }
@@ -72,8 +65,6 @@ class S2i_Update_Img extends Module
         foreach (Language::getLanguages(true) as $lang) {
             $tab->name[$lang['id_lang']] = 'S2i Image';
         }
-
-
         $parentTabID = (int)Db::getInstance()->getValue(
             '
             SELECT id_tab 
@@ -137,8 +128,8 @@ class S2i_Update_Img extends Module
             `only_title` TINYINT(1) NOT NULL DEFAULT 0,
             `title_hide` TINYINT(1) NOT NULL DEFAULT 0,
             `image_is_mobile` TINYINT(1) NOT NULL DEFAULT 0,
-        PRIMARY KEY (`id_slide`),
-        FOREIGN KEY (`id_section`) REFERENCES `' . _DB_PREFIX_ . 's2i_sections`(`id_section`) ON DELETE CASCADE
+            PRIMARY KEY (`id_slide`),
+            FOREIGN KEY (`id_section`) REFERENCES `' . _DB_PREFIX_ . 's2i_sections`(`id_section`) ON DELETE CASCADE
         ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
         // Table des traductions pour les détails
         $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 's2i_slides_lang` (
@@ -161,7 +152,6 @@ class S2i_Update_Img extends Module
                 return false;
             }
         }
-
         return true;
     }
 
@@ -253,11 +243,6 @@ class S2i_Update_Img extends Module
 
 
         return $this->display(__FILE__, 'views/templates/hook/' . $template);
-    }
-
-    public function hookDisplayNav1()
-    {
-        return $this->displaySlidesForHook('displayNav1');
     }
     public function hookDisplaySlideTitle()
     {

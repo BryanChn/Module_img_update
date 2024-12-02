@@ -34,10 +34,9 @@ class Create_section_form
         ];
         // différent hooks possibles && ajoutez ici les hooks que vous souhaitez
         $hooks = [
-            ['id' => 'displayHome', 'name' => $this->module->l('Accueil')],
             ['id' => 'displayFooter', 'name' => $this->module->l('Pied de page')],
             ['id' => 'displaySlideTitle', 'name' => $this->module->l('test')],
-            ['id' => 'displayNav1', 'name' => $this->module->l('Menu de navigation')],
+
         ];
 
         $fields_form = [
