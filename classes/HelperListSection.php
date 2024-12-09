@@ -12,12 +12,10 @@ class HelperListSection
         $helper->title = 'Liste des sections';
         $helper->table = 's2i_sections';
         $helper->identifier = 'id_section';
-        $helper->shopLinkType = ''; // ou 'shop
+        $helper->shopLinkType = '';
         $helper->simple_header = true;
-        // Modification du currentIndex pour pointer vers AdminS2iImage
-        $helper->currentIndex = $context->link->getAdminLink('AdminS2iImage');
-        $helper->token = Tools::getAdminTokenLite('AdminS2iImage');
-
+        $helper->currentIndex = $context->link->getAdminLink('AdminS2iGestionlist');
+        $helper->token = Tools::getAdminTokenLite('AdminS2iGestionlist');
         $helper->actions = ['edit', 'delete'];
 
 

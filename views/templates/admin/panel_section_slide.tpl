@@ -69,10 +69,10 @@
     {* Section Paramètres *}
     <div class="panel">
         <h3>
-            <i class="icon-edit"></i> {l s='Édition de la section' mod='s2i_update_img'}
-            <a href="{$link->getAdminLink('AdminModules', true)}&configure=s2i_update_img"
+            <i class="icon-edit"></i> {l s='Édition de la section' mod='s2i_gestionlist'}
+            <a href="{$link->getAdminLink('AdminModules', true)}&configure=s2i_gestionlist"
                 class="btn btn-default pull-right">
-                <i class="icon-arrow-left"></i> {l s='Retour' mod='s2i_update_img'}
+                <i class="icon-arrow-left"></i> {l s='Retour' mod='s2i_gestionlist'}
             </a>
         </h3>
         <div class="panel-body">
@@ -83,10 +83,10 @@
     {* Section Liste des diapositives *}
     <div class="panel">
         <h3>
-            <i class="icon-picture"></i> {l s='Slides de la section' mod='s2i_update_img'}
-            <a href="{$link->getAdminLink('AdminS2iImage')}&id_section={$id_section}&add_slide=1"
+            <i class="icon-picture"></i> {l s='Slides de la section' mod='s2i_gestionlist'}
+            <a href="{$link->getAdminLink('AdminS2iGestionlist')}&id_section={$id_section}&add_slide=1"
                 class="btn btn-primary pull-right">
-                {l s='Ajouter un slide' mod='s2i_update_img'}
+                {l s='Ajouter un slide' mod='s2i_gestionlist'}
             </a>
         </h3>
         <div class="panel-body">
@@ -118,24 +118,26 @@
                                         {if $slide.active}Actif{else}Inactif{/if}
                                     </span>
                                 </td>
+
+
                                 <td class="center">
                                     {if isset($slide.image) && $slide.image}
                                         <img src="{$link->getBaseLink()}{$img_dir}{$slide.image}" alt="" class="img-thumbnail"
                                             style="max-height: 90px;">
                                     {else}
-                                        <span class="text-muted">--</span>
+                                        <p class="text-muted">Aucune image disponible</p>
                                     {/if}
                                 </td>
 
                                 <td class="center">
                                     <div class="btn-group">
-                                        <a href="{$link->getAdminLink('AdminS2iImage')}&id_section={$id_section}&id_slide={$slide.id_slide}&edits2i_section_slides"
+                                        <a href="{$link->getAdminLink('AdminS2iGestionlist')}&id_section={$id_section}&id_slide={$slide.id_slide}&edits2i_section_slides"
                                             class="btn btn-default">
                                             <i class="icon-edit"></i>
                                         </a>
-                                        <a href="{$link->getAdminLink('AdminS2iImage')}&id_section={$id_section}&id_slide={$slide.id_slide}&deletes2i_section_slides"
+                                        <a href="{$link->getAdminLink('AdminS2iGestionlist')}&id_section={$id_section}&id_slide={$slide.id_slide}&deletes2i_section_slides"
                                             class="btn btn-default delete-slide"
-                                            onclick="return confirm('{l s='Attention ! Cette action supprimera définitivement le slide et ses images. Êtes-vous sûr de vouloir continuer ?' mod='s2i_update_img'}');">
+                                            onclick="return confirm('{l s='Attention ! Cette action supprimera définitivement le slide et ses images. Êtes-vous sûr de vouloir continuer ?' mod='s2i_gestionList'}');">
                                             <i class="icon-trash"></i>
                                         </a>
                                     </div>
@@ -164,19 +166,19 @@
                 });
 
                 $.ajax({
-                    url: s2iUpdateImgConfig.updateUrl,
+                    url: s2iGestionListConfig.updateUrl,
                     method: 'POST',
                     data: {
                         ajax: 1,
                         action: 'updatePositions',
                         positions: JSON.stringify(slidesOrder),
-                        token: s2iUpdateImgConfig.token
+                        token: s2iGestionListConfig.token
                     },
                     success: function(response) {
                         var parsedResponse = typeof response === 'string' ? JSON.parse(
                             response) : response;
                         if (parsedResponse.success) {
-                            showSuccessMessage(s2iUpdateImgConfig.successMessage);
+                            showSuccessMessage(s2iGestionListConfig.successMessage);
                             // Mettre à jour les numéros immédiatement
                             $('.slides-list tr').each(function(index) {
                                 $(this).find('.position-number').text(index +
@@ -185,13 +187,13 @@
                             });
                         } else {
                             showErrorMessage(parsedResponse.message ||
-                                s2iUpdateImgConfig.errorMessage);
+                                s2iGestionListConfig.errorMessage);
                             // Annuler le tri si erreur
                             $('.slides-list').sortable('cancel');
                         }
                     },
                     error: function() {
-                        showErrorMessage(s2iUpdateImgConfig.errorMessage);
+                        showErrorMessage(s2iGestionListConfig.errorMessage);
                         $('.slides-list').sortable('cancel');
                     }
                 });

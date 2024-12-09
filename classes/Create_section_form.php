@@ -1,9 +1,4 @@
 <?php
-
-
-
-
-
 class Create_section_form
 {
     private $module;
@@ -19,9 +14,9 @@ class Create_section_form
     {
         $helper = new HelperForm();
         $helper->module = $this->module;
-        $helper->name_controller = 'AdminS2iImage';
-        $helper->currentIndex = Context::getContext()->link->getAdminLink('AdminS2iImage');
-        $helper->token = Tools::getAdminTokenLite('AdminS2iImage');
+        $helper->name_controller = 'AdminS2iGestionlist';
+        $helper->currentIndex = Context::getContext()->link->getAdminLink('AdminS2iGestionlist');
+        $helper->token = Tools::getAdminTokenLite('AdminS2iGestionlist');
         $helper->submit_action = 'submit_create_section';
         $helper->show_toolbar = false;
         $helper->show_cancel_button = true;
@@ -32,6 +27,7 @@ class Create_section_form
             'speed' => Tools::getValue('speed', 5000),
             'hook_location[]' => Tools::getValue('hook_location', [])
         ];
+
         // différent hooks possibles && ajoutez ici les hooks que vous souhaitez
         $hooks = [
             ['id' => 'displayFooter', 'name' => $this->module->l('Pied de page')],

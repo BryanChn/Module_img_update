@@ -6,9 +6,9 @@
 
         <div class="panel-footer">
 
-            <a href="{$link->getAdminLink('AdminS2iImage')}&id_section={$id_slide}&id_section={$id_section}"
+            <a href="{$link->getAdminLink('AdminModules')}&configure=s2i_gestionlist&id_section={$id_section}"
                 class="btn btn-default pull-right">
-                <i class="icon-arrow-left"></i> {l s='Retour' mod='s2i_update_img'}
+                <i class="icon-arrow-left"></i> {l s='Retour' mod='s2i_gestionlist'}
             </a>
         </div>
     </div>

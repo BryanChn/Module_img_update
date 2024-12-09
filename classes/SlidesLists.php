@@ -17,9 +17,9 @@ class SlidesLists
         $helper->actions = ['edit', 'delete'];
         $helper->shopLinkType = '';
         $helper->bootstrap = true;
-        $helper->currentIndex = $context->link->getAdminLink('AdminS2iImage', true) . '&id_section=' . $id_section;
-        $helper->token = Tools::getAdminTokenLite('AdminS2iImage');
-        // $helper->override_folder = 'extendSlideList/'; 
+        $helper->currentIndex = $context->link->getAdminLink('AdminS2iGestionlist', true) . '&id_section=' . $id_section;
+        $helper->token = Tools::getAdminTokenLite('AdminS2iGestionlist');
+
         $context = Context::getContext();
 
 

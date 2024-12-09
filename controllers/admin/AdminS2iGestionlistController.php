@@ -1,14 +1,14 @@
 <?php
 
 
-require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/Section.php';
-require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/Slide.php';
-require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/SlideLang.php';
-require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/HelperEditSection.php';
-require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/HelperListSection.php';
-require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/Form_add_slide.php';
-require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/HookLocation.php';
-class AdminS2iImageController extends ModuleAdminController
+require_once _PS_MODULE_DIR_ . 's2i_gestionlist/classes/Section.php';
+require_once _PS_MODULE_DIR_ . 's2i_gestionlist/classes/Slide.php';
+require_once _PS_MODULE_DIR_ . 's2i_gestionlist/classes/SlideLang.php';
+require_once _PS_MODULE_DIR_ . 's2i_gestionlist/classes/HelperEditSection.php';
+require_once _PS_MODULE_DIR_ . 's2i_gestionlist/classes/HelperListSection.php';
+require_once _PS_MODULE_DIR_ . 's2i_gestionlist/classes/Form_add_slide.php';
+require_once _PS_MODULE_DIR_ . 's2i_gestionlist/classes/HookLocation.php';
+class AdminS2iGestionlistController extends ModuleAdminController
 {
     protected $positions_identifier = 'id_slide';
     public function __construct()
@@ -31,13 +31,13 @@ class AdminS2iImageController extends ModuleAdminController
     {
         if (Tools::isSubmit('delete' . $this->table)) {
             parent::postProcess();
-            Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true) . '&configure=s2i_update_img');
+            Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true) . '&configure=s2i_gestionlist');
             return;
         }
 
         if (Tools::isSubmit('submit_create_section')) {
             if ($this->handleCreateSection()) {
-                Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true) . "&configure=s2i_update_img");
+                Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true) . "&configure=s2i_gestionlist");
                 return;
             }
             return;
@@ -56,7 +56,7 @@ class AdminS2iImageController extends ModuleAdminController
         if (Tools::isSubmit('submit_add_slide')) {
             if ($this->handleAddSlide()) {
                 $id_section = (int)Tools::getValue('id_section');
-                Tools::redirectAdmin($this->context->link->getAdminLink('AdminS2iImage') . '&id_section=' . $id_section);
+                Tools::redirectAdmin($this->context->link->getAdminLink('AdminS2iGestionlist') . '&id_section=' . $id_section);
             }
             return;
         }
@@ -64,14 +64,14 @@ class AdminS2iImageController extends ModuleAdminController
         if (Tools::isSubmit('submit_update_slide')) {
             if ($this->handleUpdateSlide()) {
                 $id_section = (int)Tools::getValue('id_section');
-                Tools::redirectAdmin($this->context->link->getAdminLink('AdminS2iImage', true) . '&id_section=' . $id_section);
+                Tools::redirectAdmin($this->context->link->getAdminLink('AdminS2iGestionlist', true) . '&id_section=' . $id_section);
             }
             return;
         }
         if (Tools::isSubmit('deletes2i_section_slides')) {
             if ($this->handleDeleteSlide()) {
                 $id_section = (int)Tools::getValue('id_section');
-                Tools::redirectAdmin($this->context->link->getAdminLink('AdminS2iImage') . '&id_section=' . $id_section);
+                Tools::redirectAdmin($this->context->link->getAdminLink('AdminS2iGestionlist') . '&id_section=' . $id_section);
             }
             return;
         }
@@ -83,17 +83,12 @@ class AdminS2iImageController extends ModuleAdminController
         parent::setMedia($isNewTheme);
 
         $this->addJqueryUI('ui.sortable');
-        $this->addCSS(_MODULE_DIR_ . 's2i_update_img/css/style.css');
-
-
         Media::addJsDef([
-            's2iUpdateImgConfig' => [
+            's2iGestionListConfig' => [
                 'successMessage' => $this->trans('Positions mises à jour avec succès'),
                 'errorMessage' => $this->trans('Erreur lors de la mise à jour des positions'),
-                'updateUrl' => $this->context->link->getAdminLink('AdminS2iImage'),
-                'token' => Tools::getAdminTokenLite('AdminS2iImage'),
-
-
+                'updateUrl' => $this->context->link->getAdminLink('AdminS2iGestionlist'),
+                'token' => Tools::getAdminTokenLite('AdminS2iGestionlist')
             ]
         ]);
     }
@@ -120,7 +115,7 @@ class AdminS2iImageController extends ModuleAdminController
 
     public function ajaxProcessUpdatePositions()
     {
-        if (!Tools::getIsset('token') || Tools::getValue('token') !== Tools::getAdminTokenLite('AdminS2iImage')) {
+        if (!Tools::getIsset('token') || Tools::getValue('token') !== Tools::getAdminTokenLite('AdminS2iGestionlist')) {
             die(json_encode([
                 'success' => false,
                 'message' => $this->trans('Token invalide')
@@ -224,13 +219,22 @@ class AdminS2iImageController extends ModuleAdminController
         $slideManager = new SlideManager($this->module, $id_section);
         $slidesList = $slideManager->renderSlidesList();
         $slides = SlidesLists::getSlidesList($id_section);
+        $slides = array_map(function ($slide) {
+            $id_lang = Context::getContext()->language->id;
+            $sql = 'SELECT image 
+                    FROM ' . _DB_PREFIX_ . 's2i_slides_lang 
+                    WHERE id_slide = ' . (int)$slide['id_slide'] . ' 
+                    AND id_lang = ' . (int)$id_lang;
+            $slide['image'] = Db::getInstance()->getValue($sql);
+            return $slide;
+        }, $slides);
 
-        // Ajout de id_section dans l'assignation
         $this->context->smarty->assign([
             'editForm' => $editForm,
             'slidesList' => $slidesList,
             'id_section' => $id_section,
             'slides' => $slides,
+
         ]);
 
         return $this->module->display($this->module->getLocalPath(), 'views/templates/admin/panel_section_slide.tpl');
@@ -435,7 +439,7 @@ class AdminS2iImageController extends ModuleAdminController
 
         $this->context->cookie->__set('s2i_success_message', 'Section mise à jour avec succès');
         $this->context->cookie->write();
-        Tools::redirectAdmin($this->context->link->getAdminLink('AdminS2iImage') . '&id_section=' . $id_section);
+        Tools::redirectAdmin($this->context->link->getAdminLink('AdminS2iGestionlist') . '&id_section=' . $id_section);
         return true;
     }
 
@@ -601,7 +605,7 @@ class AdminS2iImageController extends ModuleAdminController
         $safeName = Tools::str2url($section_name);
         $extension = pathinfo($_FILES[$fileKey]['name'], PATHINFO_EXTENSION);
         $suffix = $isMobile ? '-m-' : '-';
-        $uploadDir = _PS_IMG_DIR_ . 's2i_update_img/';
+        $uploadDir = _PS_IMG_DIR_ . 's2i_gestionlist/';
 
         if (!file_exists($uploadDir)) {
             mkdir($uploadDir, 0755, true);
@@ -621,7 +625,7 @@ class AdminS2iImageController extends ModuleAdminController
         $uploadPath = $uploadDir . $imageName;
 
         if (move_uploaded_file($_FILES[$fileKey]['tmp_name'], $uploadPath)) {
-            return 's2i_update_img/' . $imageName;
+            return 's2i_gestionlist/' . $imageName;
         }
 
         $this->errors[] = $this->trans('Erreur lors du téléchargement de l\'image pour la langue ') . $id_lang;

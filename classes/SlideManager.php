@@ -1,5 +1,5 @@
 <?php
-require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/SlidesLists.php';
+require_once _PS_MODULE_DIR_ . 's2i_gestionlist/classes/SlidesLists.php';
 
 class SlideManager
 {

@@ -3,67 +3,52 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
-require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/SlidesLists.php';
-require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/Section.php';
-require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/Slide.php';
-require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/SlideLang.php';
-require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/HelperListSection.php';
-require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/Create_section_form.php';
-require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/HelperEditSection.php';
-require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/SlideManager.php';
-require_once _PS_MODULE_DIR_ . 's2i_update_img/classes/HookLocation.php';
+require_once _PS_MODULE_DIR_ . 's2i_gestionlist/classes/SlidesLists.php';
+require_once _PS_MODULE_DIR_ . 's2i_gestionlist/classes/Section.php';
+require_once _PS_MODULE_DIR_ . 's2i_gestionlist/classes/Slide.php';
+require_once _PS_MODULE_DIR_ . 's2i_gestionlist/classes/SlideLang.php';
+require_once _PS_MODULE_DIR_ . 's2i_gestionlist/classes/HelperListSection.php';
+require_once _PS_MODULE_DIR_ . 's2i_gestionlist/classes/Create_section_form.php';
+require_once _PS_MODULE_DIR_ . 's2i_gestionlist/classes/HelperEditSection.php';
+require_once _PS_MODULE_DIR_ . 's2i_gestionlist/classes/SlideManager.php';
+require_once _PS_MODULE_DIR_ . 's2i_gestionlist/classes/HookLocation.php';
 require_once dirname(__FILE__) . '/../../config/config.inc.php';
 
 
 
-class S2i_Update_Img extends Module
+class S2i_gestionlist extends Module
 {
     public function __construct()
     {
-        $this->name = 's2i_update_img';
+        $this->name = 's2i_gestionlist';
         $this->tab = 'administration';
         $this->version = '1.0.0';
-        $this->author = 'S2i';
+        $this->author = 'S2i Evolution';
         $this->need_instance = 0;
         $this->bootstrap = true;
         parent::__construct();
-        $this->displayName = $this->trans('S2I Update Image', [], 'Modules.S2iUpdateImg.Admin');
-        $this->description = $this->trans('Changez vos photos via notre interface', [], 'Modules.S2iUpdateImg.Admin');
+        $this->displayName = $this->trans('S2I Gestion List', [], 'Modules.S2iGestionList.Admin');
+        $this->description = $this->trans('Gerez vos listes de sections et slides !', [], 'Modules.S2iGestionList.Admin');
     }
     public function install()
     {
-        if (!$this->createDatabaseTable()) {
-            return false;
-        }
-        if (
-            !parent::install()
+        return parent::install()
+
+            && $this->createDatabaseTable()
+            && $this->installTab()
             // ajouter les différents hooks voulus
-
-            || !$this->registerHook('displayFooter')
-            || !$this->registerHook('displaySlideTitle')
-            || !$this->insertDefaultSection()
-            || !$this->installTab()
-        ) {
-            return false;
-        }
-        return true;
+            && $this->registerHook('displayFooter')
+            && $this->registerHook('displaySlideTitle')
+            && $this->insertDefaultSection();
     }
-
-    public function uninstall()
-    {
-        $this->uninstallTab();
-        return parent::uninstall();
-    }
-
-
     private function installTab()
     {
         $tab = new Tab();
         $tab->active = 1;
-        $tab->class_name = 'AdminS2iImage';
+        $tab->class_name = 'AdminS2iGestionlist';
         $tab->name = array();
         foreach (Language::getLanguages(true) as $lang) {
-            $tab->name[$lang['id_lang']] = 'S2i Image';
+            $tab->name[$lang['id_lang']] = 'S2i Gestion List';
         }
         $parentTabID = (int)Db::getInstance()->getValue(
             '
@@ -77,24 +62,6 @@ class S2i_Update_Img extends Module
 
         return $tab->add();
     }
-
-    private function uninstallTab()
-    {
-        $id_tab = (int)Db::getInstance()->getValue(
-            '
-            SELECT id_tab 
-            FROM `' . _DB_PREFIX_ . 'tab` 
-            WHERE class_name = "AdminS2iImage"'
-        );
-
-        if ($id_tab) {
-            $tab = new Tab($id_tab);
-            return $tab->delete();
-        }
-        return true;
-    }
-
-
 
     protected function createDatabaseTable()
     {
@@ -154,6 +121,40 @@ class S2i_Update_Img extends Module
         }
         return true;
     }
+
+
+    public function uninstall()
+    {
+        $this->uninstallTab();
+        $this->uninstallDatabaseTable();
+        return parent::uninstall();
+    }
+
+
+
+
+    private function uninstallDatabaseTable()
+    {
+        $sql = 'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 's2i_sections`, `' . _DB_PREFIX_ . 's2i_section_hooks`, `' . _DB_PREFIX_ . 's2i_section_slides`, `' . _DB_PREFIX_ . 's2i_slides_lang`';
+        return Db::getInstance()->execute($sql);
+    }
+    private function uninstallTab()
+    {
+        $id_tab = (int)Db::getInstance()->getValue(
+            '
+            SELECT id_tab 
+            FROM `' . _DB_PREFIX_ . 'tab` 
+            WHERE class_name = "AdminS2iGestionlist"'
+        );
+
+        if ($id_tab) {
+            $tab = new Tab($id_tab);
+            return $tab->delete();
+        }
+        return true;
+    }
+
+
 
 
     protected function insertDefaultSection()

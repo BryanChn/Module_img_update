@@ -7,12 +7,12 @@ class Form_add_slide
         $helper = new HelperForm();
         $helper->show_toolbar = false;
         $helper->module = $module;
-        $helper->name_controller = 'AdminS2iImage';
+        $helper->name_controller = 'AdminS2iGestionlist';
         $helper->identifier = 'id_slide';
         $helper->submit_action = 'submit_add_slide';
-        $helper->currentIndex = Context::getContext()->link->getAdminLink('AdminS2iImage');
-        $helper->token = Tools::getAdminTokenLite('AdminS2iImage');
-        $helper->base_folder = _PS_MODULE_DIR_ . 's2i_update_img/views/templates/admin/extendFormAddSlide/helpers/form/';
+        $helper->currentIndex = Context::getContext()->link->getAdminLink('AdminS2iGestionlist');
+        $helper->token = Tools::getAdminTokenLite('AdminS2iGestionlist');
+        $helper->base_folder = _PS_MODULE_DIR_ . 's2i_gestionlist/views/templates/admin/extendFormAddSlide/helpers/form/';
         $languages = Language::getLanguages(false);
         $default_lang = (int)Configuration::get('PS_LANG_DEFAULT');
         $helper->default_form_language = $default_lang;
