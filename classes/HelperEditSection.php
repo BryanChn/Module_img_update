@@ -23,7 +23,9 @@ class HelperEditSection
             'is_slider' => $section->is_slider,
             'speed' => $section->speed,
             'position' => $section->position,
-            'hook_location[]' => $hook_locations
+            'hook_location[]' => $hook_locations,
+
+
         ];
         // différent hooks possibles && ajoutez ici les hooks que vous souhaitez
         $hooks = [
@@ -121,10 +123,6 @@ class HelperEditSection
         $id_section = $slide->id_section;
         $languages = Language::getLanguages(false);
         $default_lang = (int)Configuration::get('PS_LANG_DEFAULT');
-
-
-
-
         $helper = new HelperForm();
         $helper->show_toolbar = false;
         $helper->module = $module;
@@ -152,7 +150,10 @@ class HelperEditSection
             'active' => $slide->active,
             'only_title' => $slide->only_title,
             'title_hide' => $slide->title_hide,
-            'image_is_mobile' => $slide->image_is_mobile
+            'image_is_mobile' => $slide->image_is_mobile,
+            'display_datePicker' => $slide->display_datePicker,
+            'start_date' => $slide->start_date,
+            'end_date' => $slide->end_date
         ];
 
         // Ajout des valeurs multilingues
@@ -292,6 +293,30 @@ class HelperEditSection
                         'display_image' => true,
                         'group_name' => 'image_mobile'
                     ],
+                    [
+                        'type' => 'switch',
+                        'label' => $module->l('Visibilité'),
+                        'name' => 'display_datePicker',
+                        'values' => [
+                            ['id' => 'display_datePicker_on', 'value' => 1, 'label' => $module->l('Oui')],
+                            ['id' => 'display_datePicker_off', 'value' => 0, 'label' => $module->l('Non')]
+                        ],
+                        'group_name' => 'display_datePicker'
+                    ],
+
+                    [
+                        'type' => 'datetime',
+                        'label' => $module->l('Date de début'),
+                        'name' => 'start_date',
+                        'required' => true
+                    ],
+                    [
+                        'type' => 'datetime',
+                        'label' => $module->l('Date de fin'),
+                        'name' => 'end_date',
+                        'required' => true
+                    ],
+
                 ],
                 'submit' => [
                     'title' => $module->l('Enregistrer'),

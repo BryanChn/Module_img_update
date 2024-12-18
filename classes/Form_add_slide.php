@@ -23,6 +23,9 @@ class Form_add_slide
             'active' => 1,
             'only_title' => 0,
             'image_is_mobile' => 0,
+            'display_datePicker' => 0,
+            'start_date' => date('Y-m-d H:i:s'),
+            'end_date' => date('Y-m-d H:i:s', strtotime('+1 year')),
         ];
 
 
@@ -130,6 +133,29 @@ class Form_add_slide
                         'form_group_class' => 'mobile-image',
                         'display_image' => true,
                         'group_name' => 'image_mobile'
+                    ],
+                    [
+                        'type' => 'switch',
+                        'label' => $module->l('Activer les dates'),
+                        'name' => 'display_datePicker',
+                        'values' => [
+                            ['id' => 'display_datePicker_on', 'value' => 1, 'label' => $module->l('Oui')],
+                            ['id' => 'display_datePicker_off', 'value' => 0, 'label' => $module->l('Non')]
+                        ],
+                        'group_name' => 'display_datePicker'
+                    ],
+
+                    [
+                        'type' => 'datetime',
+                        'label' => $module->l('Date de début'),
+                        'name' => 'start_date',
+                        'required' => true
+                    ],
+                    [
+                        'type' => 'datetime',
+                        'label' => $module->l('Date de fin'),
+                        'name' => 'end_date',
+                        'required' => true
                     ],
                 ],
                 'submit' => [

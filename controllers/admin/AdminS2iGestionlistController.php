@@ -469,10 +469,17 @@ class AdminS2iGestionlistController extends ModuleAdminController
         $slide->title_hide = (int)Tools::getValue('title_hide', 0);
         $slide->image_is_mobile = (int)Tools::getValue('image_mobile_enabled');
         $slide->position = $currentSlidesCount + 1;
-
+        $slide->display_datePicker = (int)Tools::getValue('display_datePicker');
         if (!$slide->add()) {
             $this->errors[] = $this->trans('Erreur lors de la création du slide');
             return false;
+        }
+        if ($slide->display_datePicker) {
+            $slide->start_date = Tools::getValue('start_date');
+            $slide->end_date = Tools::getValue('end_date');
+        } else {
+            $slide->start_date = null;
+            $slide->end_date = null;
         }
 
         // Gestion des traductions

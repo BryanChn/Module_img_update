@@ -8,7 +8,9 @@ class Slide extends ObjectModel
     public $only_title;
     public $title_hide;
     public $image_is_mobile;
-
+    public $display_datePicker;
+    public $start_date;
+    public $end_date;
     public static $definition = [
         'table' => 's2i_section_slides',
         'primary' => 'id_slide',
@@ -19,8 +21,12 @@ class Slide extends ObjectModel
             'only_title' => ['type' => self::TYPE_BOOL, 'validate' => 'isBool', 'required' => false],
             'title_hide' => ['type' => self::TYPE_BOOL, 'validate' => 'isBool', 'required' => false],
             'image_is_mobile' => ['type' => self::TYPE_BOOL, 'validate' => 'isBool', 'required' => false],
+            'start_date' => ['type' => self::TYPE_DATE, 'validate' => 'isDate', 'required' => false],
+            'end_date' => ['type' => self::TYPE_DATE, 'validate' => 'isDate', 'required' => false],
+            'display_datePicker' => ['type' => self::TYPE_BOOL, 'validate' => 'isBool', 'required' => false],
         ],
     ];
+
     public static function getBySection($id_section)
     {
         $sql = 'SELECT ss.*, sl.title, sl.image 

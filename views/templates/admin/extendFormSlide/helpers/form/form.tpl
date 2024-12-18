@@ -126,5 +126,50 @@
                 $('#' + inputId).click();
             });
         });
+
+        // date picker 
+        $(document).ready(function() {
+            // Fonction pour gérer l'affichage des champs de date
+        function toggleDateFields() {
+            var displayDatePicker = $('input[name="display_datePicker"]:checked').val() == 1;
+            var dateFields = $('input[name="start_date"], input[name="end_date"]').closest('.form-group');
+
+            if (displayDatePicker) {
+                dateFields.show();
+                // Si les dates sont vides, initialiser avec les valeurs par défaut
+                if (!$('input[name="start_date"]').val()) {
+                    var today = new Date();
+                    var nextYear = new Date();
+                    nextYear.setFullYear(today.getFullYear() + 1);
+
+                    $('input[name="start_date"]').val(formatDate(today));
+                    $('input[name="end_date"]').val(formatDate(nextYear));
+                }
+            } else {
+                dateFields.hide();
+            }
+        }
+
+        // Fonction pour formater la date en format YYYY-MM-DD HH:mm:ss
+        function formatDate(date) {
+            return date.getFullYear() + '-' +
+                String(date.getMonth() + 1).padStart(2, '0') + '-' +
+                String(date.getDate()).padStart(2, '0') + ' ' +
+                String(date.getHours()).padStart(2, '0') + ':' +
+                String(date.getMinutes()).padStart(2, '0') + ':' +
+                String(date.getSeconds()).padStart(2, '0');
+        }
+
+        // Initialisation
+        toggleDateFields();
+
+        // Événement au changement du switch
+        $('input[name="display_datePicker"]').change(toggleDateFields);
+        });
+
+
+        // date picker 
     </script>
+
+
 {/block}
