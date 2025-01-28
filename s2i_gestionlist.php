@@ -199,26 +199,43 @@ class S2i_gestionlist extends Module
     }
 
     // partie gestion hooks
+
+
     private function displaySlidesForHook($hookName)
     {
         // Récupère les sections liées au hook spécifié
         $sections = HookLocation::getSectionsByHook($hookName);
+        $now = new DateTime();
+        $currentDate = $now->format('Y-m-d H:i:s');
+
+
 
         $allSlides = [];
         foreach ($sections as $section) {
-
             $slides = SlidesLists::getSlidesList($section['id_section']);
+            $filteredSlides = array_filter($slides, function ($slide) use ($hookName, $currentDate) {
 
-            // Filtre les slides actifs
-            $filteredSlides = array_filter($slides, function ($slide) use ($hookName) {
-                $isActive = $slide['active'];
-
-                // verif de only_title
-                if ($hookName === 'displaySlideTitle') {
-                    return $isActive && $slide['only_title'];
+                if (!$slide['active']) {
+                    return false;
                 }
 
-                return $isActive;
+
+                if ($slide['display_datePicker']) {
+                    $startDate = new DateTime($slide['start_date']);
+                    $endDate = new DateTime($slide['end_date']);
+                    $now = new DateTime($currentDate);
+
+                    if ($now < $startDate || $now > $endDate) {
+                        return false;
+                    }
+                }
+
+
+                if ($hookName === 'displaySlideTitle') {
+                    return $slide['only_title'];
+                }
+
+                return true;
             });
 
             if (!empty($filteredSlides)) {
@@ -230,6 +247,8 @@ class S2i_gestionlist extends Module
                 $allSlides = array_merge($allSlides, $filteredSlides);
             }
         }
+
+        // Tri par position
         usort($allSlides, function ($a, $b) {
             return $a['position'] - $b['position'];
         });
@@ -239,7 +258,7 @@ class S2i_gestionlist extends Module
             'hook_name' => $hookName
         ]);
 
-        // Sélectionne le template approprié selon le hook && ajoutez ici les templates voulus
+        // Sélectionne le template approprié selon le hook
         $template = 'default-slides.tpl';
         if ($hookName === 'displaySlideTitle') {
             $template = 'search-menu.tpl';

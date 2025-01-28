@@ -470,16 +470,13 @@ class AdminS2iGestionlistController extends ModuleAdminController
         $slide->image_is_mobile = (int)Tools::getValue('image_mobile_enabled');
         $slide->position = $currentSlidesCount + 1;
         $slide->display_datePicker = (int)Tools::getValue('display_datePicker');
+        $slide->start_date = Tools::getValue('start_date');
+        $slide->end_date = Tools::getValue('end_date');
+
+
         if (!$slide->add()) {
             $this->errors[] = $this->trans('Erreur lors de la création du slide');
             return false;
-        }
-        if ($slide->display_datePicker) {
-            $slide->start_date = Tools::getValue('start_date');
-            $slide->end_date = Tools::getValue('end_date');
-        } else {
-            $slide->start_date = null;
-            $slide->end_date = null;
         }
 
         // Gestion des traductions
@@ -514,6 +511,7 @@ class AdminS2iGestionlistController extends ModuleAdminController
         return empty($this->errors);
     }
 
+
     protected function handleUpdateSlide()
     {
         $id_slide = (int)Tools::getValue('id_slide');
@@ -540,6 +538,9 @@ class AdminS2iGestionlistController extends ModuleAdminController
         $slide->only_title = (int)Tools::getValue('only_title');
         $slide->title_hide = (int)Tools::getValue('title_hide');
         $slide->image_is_mobile = (int)Tools::getValue('image_is_mobile');
+        $slide->display_datePicker = (int)Tools::getValue('display_datePicker');
+        $slide->start_date = Tools::getValue('start_date');
+        $slide->end_date = Tools::getValue('end_date');
 
         if (!$slide->update()) {
             $this->errors[] = $this->trans('Erreur lors de la mise à jour du slide');

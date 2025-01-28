@@ -301,7 +301,23 @@ class HelperEditSection
                             ['id' => 'display_datePicker_on', 'value' => 1, 'label' => $module->l('Oui')],
                             ['id' => 'display_datePicker_off', 'value' => 0, 'label' => $module->l('Non')]
                         ],
-                        'group_name' => 'display_datePicker'
+                        'group_name' => 'display_datePicker',
+                        'desc' => '<script>
+                            $(document).ready(function() {
+                                function toggleDatePicker() {
+                                    if ($("input[name=\'display_datePicker\']:checked").val() == 1) {
+                                        $("input[name=\'start_date\']").closest(".form-group").show();
+                                        $("input[name=\'end_date\']").closest(".form-group").show();
+                                    } else {
+                                        $("input[name=\'start_date\']").closest(".form-group").hide();
+                                        $("input[name=\'end_date\']").closest(".form-group").hide();
+                                    }
+                                }
+                                
+                                toggleDatePicker();
+                                $("input[name=\'display_datePicker\']").change(toggleDatePicker);
+                            });
+                        </script>'
                     ],
 
                     [

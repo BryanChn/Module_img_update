@@ -24,8 +24,8 @@ class Form_add_slide
             'only_title' => 0,
             'image_is_mobile' => 0,
             'display_datePicker' => 0,
-            'start_date' => date('Y-m-d H:i:s'),
-            'end_date' => date('Y-m-d H:i:s', strtotime('+1 year')),
+            'start_date' => date('Y-m-d 00:00:00'),
+            'end_date' => date('Y-m-d 00:00:00', strtotime('+1 year')),
         ];
 
 
@@ -43,6 +43,8 @@ class Form_add_slide
             $helper->fields_value['legend_' . $id_lang] = Tools::getValue('legend_' . $id_lang, '');
             $helper->fields_value['url_' . $id_lang] = Tools::getValue('url_' . $id_lang, '');
             $helper->fields_value['image_' . $id_lang] = '';
+            $helper->fields_value['start_date_' . $id_lang] = '';
+            $helper->fields_value['end_date_' . $id_lang] = '';
         }
 
         $fields_form = [
@@ -136,13 +138,29 @@ class Form_add_slide
                     ],
                     [
                         'type' => 'switch',
-                        'label' => $module->l('Activer les dates'),
+                        'label' => $module->l('Date de visibilité'),
                         'name' => 'display_datePicker',
                         'values' => [
                             ['id' => 'display_datePicker_on', 'value' => 1, 'label' => $module->l('Oui')],
                             ['id' => 'display_datePicker_off', 'value' => 0, 'label' => $module->l('Non')]
                         ],
-                        'group_name' => 'display_datePicker'
+                        'group_name' => 'display_datePicker',
+                        'desc' => '<script>
+                            $(document).ready(function() {
+                                function toggleDatePicker() {
+                                    if ($("input[name=\'display_datePicker\']:checked").val() == 1) {
+                                        $("input[name=\'start_date\']").closest(".form-group").show();
+                                        $("input[name=\'end_date\']").closest(".form-group").show();
+                                    } else {
+                                        $("input[name=\'start_date\']").closest(".form-group").hide();
+                                        $("input[name=\'end_date\']").closest(".form-group").hide();
+                                    }
+                                }
+                                
+                                toggleDatePicker();
+                                $("input[name=\'display_datePicker\']").change(toggleDatePicker);
+                            });
+                        </script>'
                     ],
 
                     [

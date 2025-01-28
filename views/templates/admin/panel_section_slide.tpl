@@ -98,8 +98,12 @@
                             <th class="center">ID</th>
                             <th class="left">Titre</th>
                             <th class="center">Actif</th>
+                            <th class="center">Date de visibilité</th>
+                            <th class="center">En cours</th>
                             <th class="center">Image</th>
                             <th class="center">Actions</th>
+
+
                         </tr>
                     </thead>
                     <tbody class="slides-list">
@@ -114,21 +118,45 @@
                                 <td class="center">{$slide.id_slide}</td>
                                 <td class="left">{$slide.title}</td>
                                 <td class="center">
-                                    <span class="badge {if $slide.active}badge-success{else}badge-danger{/if}">
+                                    <span class="badge {if $slide.active}badge-success{else}badge-warning{/if}">
                                         {if $slide.active}Actif{else}Inactif{/if}
                                     </span>
                                 </td>
+                                <td class="center">
+                                    {if $slide.display_datePicker}
+                                        {assign var="now" value=date('Y-m-d H:i:s')}
+                                        <span style="color: rgb(0, 0, 0);">
+                                            <strong>Du:</strong> {$slide.start_date|date_format:'%d/%m/%Y %H:%M:%S'}<br>
+                                            <strong>Au:</strong> {$slide.end_date|date_format:'%d/%m/%Y %H:%M:%S'}
+                                        </span>
+                                    {else}
 
+                                    {/if}
+                                </td>
+                                <td class="center">
+                                    {if $slide.display_datePicker}
+                                        {assign var="now" value=date('Y-m-d H:i:s')}
+                                        {assign var="start_datetime" value=strtotime($slide.start_date)}
+                                        {assign var="end_datetime" value=strtotime($slide.end_date)}
+                                        {assign var="current_datetime" value=strtotime($now)}
+                                        {if $start_datetime <= $current_datetime && $end_datetime >= $current_datetime}
+                                            <i class="icon-circle" style="color: #72C279;"></i>
+                                        {else}
+                                            <i class="icon-circle" style="color: #000000;"></i>
+                                        {/if}
+                                    {else}
+                                        <i class="icon-circle" style="color: #000000;"></i>
+                                    {/if}
+                                </td>
 
                                 <td class="center">
                                     {if isset($slide.image) && $slide.image}
                                         <img src="{$link->getBaseLink()}{$img_dir}{$slide.image}" alt="" class="img-thumbnail"
                                             style="max-height: 90px;">
                                     {else}
-                                        <p class="text-muted">Aucune image disponible</p>
+
                                     {/if}
                                 </td>
-
                                 <td class="center">
                                     <div class="btn-group">
                                         <a href="{$link->getAdminLink('AdminS2iGestionlist')}&id_section={$id_section}&id_slide={$slide.id_slide}&edits2i_section_slides"
